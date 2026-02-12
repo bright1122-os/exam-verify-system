@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Shield, CheckCircle, Zap, Lock, QrCode, Users, ArrowRight, Sparkles, GraduationCap, ScanLine } from 'lucide-react';
-import { GoogleLoginButton } from '../components/auth/GoogleLoginButton';
+import { Shield, CheckCircle, Zap, Lock, QrCode, Users, ArrowRight, Sparkles, GraduationCap, ScanLine, LogIn } from 'lucide-react';
 import { heroMockups, mockStudentPhotos, generateAvatar } from '../utils/mockImages';
 
 export default function Home() {
@@ -70,15 +69,20 @@ export default function Home() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 mb-10">
-                <div className="sm:max-w-xs">
-                  <GoogleLoginButton />
-                </div>
                 <Link
-                  to="/student/register"
+                  to="/auth/signup?role=student"
+                  className="flex items-center justify-center gap-2 px-8 py-4 bg-white text-primary-700 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:bg-neutral-50 transition-all"
+                >
+                  <GraduationCap className="w-5 h-5" />
+                  Get Started as Student
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  to="/auth/login"
                   className="flex items-center justify-center gap-2 px-6 py-4 border-2 border-white/20 text-white rounded-xl font-semibold hover:bg-white/10 transition-all"
                 >
-                  Register as Student
-                  <ArrowRight className="w-4 h-4" />
+                  <LogIn className="w-4 h-4" />
+                  Sign In
                 </Link>
               </div>
 
@@ -318,9 +322,21 @@ export default function Home() {
               Examiners get a dedicated portal with live scan stats, student verification, and exam hall management.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <div className="sm:max-w-xs">
-                <GoogleLoginButton />
-              </div>
+              <Link
+                to="/auth/signup?role=examiner"
+                className="flex items-center justify-center gap-2 px-8 py-4 bg-white text-primary-700 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"
+              >
+                <ScanLine className="w-5 h-5" />
+                Join as Examiner
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                to="/auth/login?role=examiner"
+                className="flex items-center justify-center gap-2 px-6 py-4 border-2 border-white/20 text-white rounded-xl font-semibold hover:bg-white/10 transition-all"
+              >
+                <LogIn className="w-4 h-4" />
+                Examiner Sign In
+              </Link>
             </div>
           </motion.div>
         </div>
@@ -334,10 +350,23 @@ export default function Home() {
             Ready to secure your exams?
           </h3>
           <p className="text-neutral-500 dark:text-neutral-400 mb-6">
-            Sign in with Google to get started. Students and examiners welcome.
+            Create an account to get started. Students and examiners welcome.
           </p>
-          <div className="max-w-xs mx-auto">
-            <GoogleLoginButton />
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              to="/auth/signup?role=student"
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-semibold transition-colors"
+            >
+              <GraduationCap className="w-4 h-4" />
+              Student Sign Up
+            </Link>
+            <Link
+              to="/auth/signup?role=examiner"
+              className="flex items-center justify-center gap-2 px-6 py-3 border-2 border-primary-600 text-primary-600 dark:text-primary-400 dark:border-primary-400 rounded-xl font-semibold hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+            >
+              <ScanLine className="w-4 h-4" />
+              Examiner Sign Up
+            </Link>
           </div>
         </div>
       </section>

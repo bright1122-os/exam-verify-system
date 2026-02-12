@@ -36,8 +36,8 @@ export default function Register() {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Photo must be less than 5MB');
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Photo must be less than 10MB');
       return;
     }
 
@@ -240,14 +240,14 @@ export default function Register() {
                     Upload Your Photo
                   </h2>
                   <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-                    Upload a clear passport-style photo. Max 5MB, JPG or PNG only.
+                    Upload a clear passport-style photo. Max 10MB, JPG or PNG only.
                   </p>
 
                   {!photoPreview ? (
                     <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-neutral-300 dark:border-neutral-700 rounded-2xl cursor-pointer hover:border-primary-500 transition-colors bg-neutral-50 dark:bg-neutral-800/50">
                       <Upload className="w-12 h-12 text-neutral-400 mb-4" />
                       <span className="text-neutral-600 dark:text-neutral-400 font-medium">Click to upload photo</span>
-                      <span className="text-sm text-neutral-400 mt-1">JPG, PNG - Max 5MB</span>
+                      <span className="text-sm text-neutral-400 mt-1">JPG, PNG - Max 10MB</span>
                       <input
                         type="file"
                         accept="image/jpeg,image/png"

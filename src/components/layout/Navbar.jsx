@@ -7,6 +7,8 @@ import {
   Sun,
   Moon,
   LogOut,
+  LogIn,
+  UserPlus,
   GraduationCap,
   Home,
   QrCode,
@@ -130,15 +132,28 @@ export const Navbar = () => {
                 </motion.button>
               </div>
             ) : (
-              <Link to="/student/register" className="hidden md:block">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="btn-primary"
-                >
-                  Get Started
-                </motion.button>
-              </Link>
+              <div className="hidden md:flex items-center gap-2">
+                <Link to="/auth/login">
+                  <motion.button
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    Sign In
+                  </motion.button>
+                </Link>
+                <Link to="/auth/signup">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-lg transition-colors"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    Sign Up
+                  </motion.button>
+                </Link>
+              </div>
             )}
 
             <button
@@ -166,13 +181,24 @@ export const Navbar = () => {
         >
           <div className="px-4 py-4 space-y-3">
             {!isAuthenticated && (
-              <Link
-                to="/student/register"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary-600 text-white font-medium"
-              >
-                Get Started
-              </Link>
+              <>
+                <Link
+                  to="/auth/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <LogIn className="w-5 h-5" />
+                  <span className="font-medium">Sign In</span>
+                </Link>
+                <Link
+                  to="/auth/signup"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary-600 text-white font-medium"
+                >
+                  <UserPlus className="w-5 h-5" />
+                  <span>Sign Up</span>
+                </Link>
+              </>
             )}
             {links.map((link) => {
               const Icon = link.icon;

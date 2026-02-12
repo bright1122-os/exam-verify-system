@@ -6,6 +6,8 @@ import { useStore } from './store/useStore';
 // Pages
 import Home from './pages/Home';
 import AuthCallback from './pages/auth/AuthCallback';
+import Login from './pages/auth/Login';
+import SignUp from './pages/auth/SignUp';
 
 // Student Pages
 import StudentDashboard from './pages/student/Dashboard';
@@ -24,7 +26,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   const { isAuthenticated, userType } = useStore();
 
   if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/auth/login" replace />;
   }
 
   if (allowedRoles && !allowedRoles.includes(userType)) {
@@ -43,10 +45,16 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
+          <Route path="/auth/login" element={<Login />} />
+          <Route path="/auth/signup" element={<SignUp />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
 
           {/* Student Routes */}
-          <Route path="/student/register" element={<StudentRegister />} />
+          <Route path="/student/register" element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <StudentRegister />
+            </ProtectedRoute>
+          } />
           <Route path="/student/dashboard" element={
             <ProtectedRoute allowedRoles={['student']}>
               <StudentDashboard />
