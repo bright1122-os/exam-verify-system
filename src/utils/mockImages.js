@@ -1,11 +1,11 @@
-// Generate placeholder avatar
+// Generate placeholder avatar with terracotta accent
 export const generateAvatar = (name) => {
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=400&background=6366f1&color=ffffff&bold=true&format=svg`;
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=400&background=d97757&color=faf9f5&bold=true&format=svg`;
 };
 
 // Generate QR code placeholder
 export const generateQRPlaceholder = () => {
-  return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iIzFhMWEyZSIvPjxwYXRoIGQ9Ik01MCw1MGgzMDB2MzAwSDUweiIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==';
+  return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2U4ZTZkYyIvPjxyZWN0IHg9IjEwMCIgeT0iMTAwIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgcng9IjEyIiBmaWxsPSIjZmFmOWY1Ii8+PHJlY3QgeD0iMTQwIiB5PSIxNDAiIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiByeD0iOCIgZmlsbD0iI2Q5Nzc1NyIgb3BhY2l0eT0iMC4zIi8+PC9zdmc+';
 };
 
 // Mock student photos

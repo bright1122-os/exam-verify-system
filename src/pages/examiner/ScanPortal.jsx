@@ -2,11 +2,15 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import jsQR from 'jsqr';
-import { Camera, QrCode, CheckCircle, XCircle, RefreshCw, User, Shield, AlertTriangle } from 'lucide-react';
-import api from '../../services/api';
+import { Camera, QrCode, CheckCircle, XCircle, RefreshCw, User, Shield, ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { supabase } from '../../lib/supabase';
+import { useStore } from '../../store/useStore';
 import { PageTransition } from '../../components/layout/PageTransition';
+import { decryptQRData } from '../../utils/crypto';
 
 export default function ScanPortal() {
+  const { user } = useStore();
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const animationRef = useRef(null);
@@ -69,7 +73,7 @@ export default function ScanPortal() {
     animationRef.current = requestAnimationFrame(tick);
   }, []);
 
-  const handleQRDetected = async (qrData) => {
+  const handleQRDetected = async (qrDataString) => {
     stopCamera();
 
     // Vibration feedback
@@ -79,14 +83,46 @@ export default function ScanPortal() {
 
     setLoading(true);
     try {
-      const response = await api.post('/examiner/scan', { qrData });
+      // 1. Decrypt QR Data
+      console.log('Scanned Raw:', qrDataString);
+      const qrData = decryptQRData(qrDataString);
+
+      if (!qrData) {
+        throw new Error('Invalid or Tampered QR Code. Decryption failed.');
+      }
+
+      if (qrData.verifier !== 'exam-verify-system') {
+        throw new Error('QR Code issuing authority mismatch.');
+      }
+
+      const { id } = qrData;
+      if (!id) throw new Error('Invalid QR Code data: Missing ID.');
+
+      // Fetch Student
+      const { data: student, error } = await supabase
+        .from('students')
+        .select(`
+            *,
+            profiles:profiles!user_id (full_name)
+        `)
+        .eq('id', id)
+        .single();
+
+      if (error || !student) throw new Error('Student not found.');
+      if (!student.qr_generated) throw new Error('Student has not generated a valid exam pass.');
+
       setResult({
         success: true,
-        student: response.data.student,
-        message: response.data.message || 'Student verified successfully',
+        student: {
+          ...student,
+          name: student.profiles?.full_name || 'Student'
+        },
+        message: 'Student verified successfully',
       });
       setShowApproveForm(true);
+
     } catch (error) {
+      console.error('Scan Error:', error);
       setResult({
         success: false,
         message: error?.message || 'Verification failed',
@@ -104,15 +140,24 @@ export default function ScanPortal() {
 
     setLoading(true);
     try {
-      await api.post('/examiner/approve', {
-        studentId: result.student._id,
-        examHall,
-        notes,
-      });
+      const { error } = await supabase
+        .from('verifications')
+        .insert({
+          student_id: result.student.id,
+          examiner_id: user.id, // Current logged-in examiner
+          status: 'approved',
+          exam_hall: examHall,
+          notes: notes,
+          scanned_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+
       toast.success('Student approved!');
       resetScan();
     } catch (error) {
-      toast.error(error?.message || 'Approval failed');
+      console.error(error);
+      toast.error(error.message || 'Approval failed');
     } finally {
       setLoading(false);
     }
@@ -126,15 +171,24 @@ export default function ScanPortal() {
 
     setLoading(true);
     try {
-      await api.post('/examiner/deny', {
-        studentId: result.student._id,
-        examHall: examHall || 'N/A',
-        notes,
-        denialReason,
-      });
+      const { error } = await supabase
+        .from('verifications')
+        .insert({
+          student_id: result.student.id,
+          examiner_id: user.id,
+          status: 'denied',
+          exam_hall: examHall || 'N/A',
+          notes: notes,
+          denial_reason: denialReason,
+          scanned_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+
       toast.success('Entry denied');
       resetScan();
     } catch (error) {
+      console.error(error);
       toast.error(error?.message || 'Denial failed');
     } finally {
       setLoading(false);
@@ -158,23 +212,26 @@ export default function ScanPortal() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 py-8 px-4">
+      <div className="min-h-screen bg-[#FCFAF7] py-8 px-4 font-body text-[#333331]">
         <div className="max-w-lg mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-display font-bold text-neutral-900 dark:text-white mb-2">
-              QR Scanner
-            </h1>
-            <p className="text-neutral-600 dark:text-neutral-400">
-              Scan student QR codes for exam verification
-            </p>
+          <div className="flex items-center justify-between mb-8">
+            <Link to="/examiner/dashboard" className="text-[#666660] hover:text-[#141413] transition-colors">
+              <ArrowLeft className="w-6 h-6" />
+            </Link>
+            <div className="text-center">
+              <h1 className="text-2xl font-heading font-medium text-[#141413]">
+                Scan Portal
+              </h1>
+            </div>
+            <div className="w-6" /> {/* Spacer */}
           </div>
 
           {/* Scanner Area */}
           {!result && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white dark:bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-800"
+              className="bg-[#141413] rounded-2xl overflow-hidden border-4 border-[#D9D9D5] shadow-xl"
             >
               <div className="relative aspect-square bg-black">
                 <video
@@ -188,27 +245,27 @@ export default function ScanPortal() {
                 {/* Scanning Overlay */}
                 {scanning && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-64 h-64 border-2 border-primary-500 rounded-2xl relative">
+                    <div className="w-64 h-64 border-2 border-[#D97757] rounded-2xl relative">
                       <motion.div
-                        className="absolute left-0 right-0 h-0.5 bg-primary-500"
+                        className="absolute left-0 right-0 h-0.5 bg-[#D97757] shadow-[0_0_10px_rgba(217,119,87,0.8)]"
                         animate={{ top: ['0%', '100%', '0%'] }}
                         transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
                       />
-                      <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-primary-500 rounded-tl-lg" />
-                      <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-primary-500 rounded-tr-lg" />
-                      <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-primary-500 rounded-bl-lg" />
-                      <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-primary-500 rounded-br-lg" />
+                      <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-[#D97757] rounded-tl-lg" />
+                      <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-[#D97757] rounded-tr-lg" />
+                      <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-[#D97757] rounded-bl-lg" />
+                      <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-[#D97757] rounded-br-lg" />
                     </div>
                   </div>
                 )}
 
                 {!scanning && !loading && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-neutral-900/80">
-                    <Camera className="w-16 h-16 text-neutral-400 mb-4" />
-                    <p className="text-neutral-400 mb-4">Camera is off</p>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#141413]/90">
+                    <Camera className="w-16 h-16 text-[#999995] mb-4" />
+                    <p className="text-[#999995] mb-6 font-heading">Camera is off</p>
                     <button
                       onClick={startCamera}
-                      className="px-6 py-3 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-colors"
+                      className="px-8 py-3 bg-[#D97757] text-[#FAF9F5] rounded-xl font-heading font-semibold hover:bg-[#C86546] transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
                     >
                       Start Scanning
                     </button>
@@ -216,20 +273,20 @@ export default function ScanPortal() {
                 )}
 
                 {loading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-neutral-900/80">
+                  <div className="absolute inset-0 flex items-center justify-center bg-[#141413]/90">
                     <div className="text-center">
-                      <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                      <p className="text-white">Verifying...</p>
+                      <div className="w-12 h-12 border-4 border-[#D97757] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                      <p className="text-[#FAF9F5] font-heading">Verifying...</p>
                     </div>
                   </div>
                 )}
               </div>
 
               {scanning && (
-                <div className="p-4 text-center">
+                <div className="p-4 text-center bg-[#141413] border-t border-white/10">
                   <button
                     onClick={stopCamera}
-                    className="text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                    className="text-sm text-[#999995] hover:text-[#FAF9F5] transition-colors font-heading uppercase tracking-wider"
                   >
                     Stop Camera
                   </button>
@@ -247,25 +304,25 @@ export default function ScanPortal() {
                 exit={{ opacity: 0, scale: 0.95 }}
               >
                 {result.success ? (
-                  <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
+                  <div className="bg-white rounded-2xl border border-[#D9D9D5] overflow-hidden shadow-lg">
                     {/* Success Header */}
-                    <div className="bg-success-500 p-6 text-white text-center">
+                    <div className="bg-[#788C5D] p-6 text-[#FAF9F5] text-center">
                       <CheckCircle className="w-12 h-12 mx-auto mb-2" />
-                      <h2 className="font-display font-bold text-xl">Student Verified</h2>
+                      <h2 className="font-heading font-bold text-xl">Student Verified</h2>
                     </div>
 
                     {/* Student Info */}
                     <div className="p-6">
                       <div className="flex items-center gap-4 mb-6">
-                        <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-800 rounded-xl flex items-center justify-center">
-                          <User className="w-8 h-8 text-neutral-400" />
+                        <div className="w-16 h-16 bg-[#F2F0E9] rounded-xl flex items-center justify-center text-[#141413]">
+                          <User className="w-8 h-8" />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-neutral-900 dark:text-white">
-                            {result.student?.userId?.name || 'Student'}
+                          <h3 className="font-heading font-semibold text-[#141413] text-lg">
+                            {result.student.name}
                           </h3>
-                          <p className="text-sm text-neutral-500">{result.student?.matricNumber}</p>
-                          <p className="text-sm text-neutral-400">{result.student?.department} - {result.student?.level}</p>
+                          <p className="text-sm font-heading text-[#666660]">{result.student.matric_number}</p>
+                          <p className="text-xs font-body text-[#666660]/80 mt-1">{result.student.department} • {result.student.level} Lvl</p>
                         </div>
                       </div>
 
@@ -273,39 +330,39 @@ export default function ScanPortal() {
                       {showApproveForm && !showDenyForm && (
                         <div className="space-y-4">
                           <div>
-                            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                              Exam Hall *
+                            <label className="block text-sm font-heading font-medium text-[#141413] mb-1">
+                              Exam Hall
                             </label>
                             <input
                               value={examHall}
                               onChange={(e) => setExamHall(e.target.value)}
-                              className="input-field"
+                              className="w-full px-4 py-2 rounded-lg bg-[#FCFAF7] border border-[#D9D9D5] text-[#141413] focus:outline-none focus:ring-1 focus:ring-[#D97757]"
                               placeholder="e.g., Hall A, Room 101"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                            <label className="block text-sm font-heading font-medium text-[#141413] mb-1">
                               Notes (optional)
                             </label>
                             <textarea
                               value={notes}
                               onChange={(e) => setNotes(e.target.value)}
-                              className="input-field"
+                              className="w-full px-4 py-2 rounded-lg bg-[#FCFAF7] border border-[#D9D9D5] text-[#141413] focus:outline-none focus:ring-1 focus:ring-[#D97757]"
                               rows={2}
                               placeholder="Any additional notes..."
                             />
                           </div>
-                          <div className="flex gap-3">
+                          <div className="flex gap-3 pt-2">
                             <button
                               onClick={handleApprove}
                               disabled={loading}
-                              className="flex-1 px-4 py-3 bg-success-600 text-white rounded-xl font-semibold hover:bg-success-700 transition-colors disabled:opacity-50"
+                              className="flex-1 px-4 py-3 bg-[#788C5D] text-[#FAF9F5] rounded-xl font-heading font-semibold hover:bg-[#6A7B51] transition-colors disabled:opacity-50"
                             >
                               {loading ? 'Approving...' : 'Approve Entry'}
                             </button>
                             <button
                               onClick={() => setShowDenyForm(true)}
-                              className="px-4 py-3 bg-red-100 text-red-700 rounded-xl font-semibold hover:bg-red-200 transition-colors"
+                              className="px-4 py-3 bg-[#CC5555]/10 text-[#CC5555] rounded-xl font-heading font-semibold hover:bg-[#CC5555]/20 transition-colors"
                             >
                               Deny
                             </button>
@@ -317,13 +374,13 @@ export default function ScanPortal() {
                       {showDenyForm && (
                         <div className="space-y-4">
                           <div>
-                            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                              Denial Reason *
+                            <label className="block text-sm font-heading font-medium text-[#141413] mb-1">
+                              Denial Reason
                             </label>
                             <select
                               value={denialReason}
                               onChange={(e) => setDenialReason(e.target.value)}
-                              className="input-field"
+                              className="w-full px-4 py-2 rounded-lg bg-[#FCFAF7] border border-[#D9D9D5] text-[#141413] focus:outline-none focus:ring-1 focus:ring-[#D97757]"
                             >
                               <option value="">Select reason</option>
                               <option value="photo_mismatch">Photo Mismatch</option>
@@ -334,28 +391,28 @@ export default function ScanPortal() {
                             </select>
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                            <label className="block text-sm font-heading font-medium text-[#141413] mb-1">
                               Notes
                             </label>
                             <textarea
                               value={notes}
                               onChange={(e) => setNotes(e.target.value)}
-                              className="input-field"
+                              className="w-full px-4 py-2 rounded-lg bg-[#FCFAF7] border border-[#D9D9D5] text-[#141413] focus:outline-none focus:ring-1 focus:ring-[#D97757]"
                               rows={2}
                               placeholder="Additional details..."
                             />
                           </div>
-                          <div className="flex gap-3">
+                          <div className="flex gap-3 pt-2">
                             <button
                               onClick={handleDeny}
                               disabled={loading}
-                              className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors disabled:opacity-50"
+                              className="flex-1 px-4 py-3 bg-[#CC5555] text-white rounded-xl font-heading font-semibold hover:bg-[#B34444] transition-colors disabled:opacity-50"
                             >
                               {loading ? 'Denying...' : 'Confirm Deny'}
                             </button>
                             <button
                               onClick={() => setShowDenyForm(false)}
-                              className="px-4 py-3 bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 rounded-xl font-semibold hover:bg-neutral-300 transition-colors"
+                              className="px-4 py-3 bg-[#F2F0E9] text-[#141413] rounded-xl font-heading font-semibold hover:bg-[#E6E4DC] transition-colors"
                             >
                               Back
                             </button>
@@ -366,19 +423,20 @@ export default function ScanPortal() {
                   </div>
                 ) : (
                   /* Error Result */
-                  <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
-                    <div className="bg-red-500 p-6 text-white text-center">
+                  <div className="bg-white rounded-2xl border border-[#D9D9D5] overflow-hidden shadow-lg cursor-pointer" onClick={() => { resetScan(); startCamera(); }}>
+                    <div className="bg-[#CC5555] p-6 text-white text-center">
                       <XCircle className="w-12 h-12 mx-auto mb-2" />
-                      <h2 className="font-display font-bold text-xl">Verification Failed</h2>
+                      <h2 className="font-heading font-bold text-xl">Verification Failed</h2>
                     </div>
-                    <div className="p-6 text-center">
-                      <p className="text-neutral-600 dark:text-neutral-400 mb-4">{result.message}</p>
+                    <div className="p-8 text-center bg-[#FCFAF7]">
+                      <p className="text-[#141413] mb-6 font-body font-medium">{result.message}</p>
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           resetScan();
                           startCamera();
                         }}
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-colors"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-[#141413] text-[#FAF9F5] rounded-xl font-heading font-semibold hover:bg-[#333331] transition-colors"
                       >
                         <RefreshCw className="w-4 h-4" />
                         Scan Again
@@ -394,7 +452,7 @@ export default function ScanPortal() {
                       resetScan();
                       startCamera();
                     }}
-                    className="w-full mt-4 flex items-center justify-center gap-2 px-6 py-3 bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 rounded-xl font-semibold hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors"
+                    className="w-full mt-4 flex items-center justify-center gap-2 px-6 py-3 bg-[#F2F0E9] text-[#141413] border border-[#D9D9D5] rounded-xl font-heading font-semibold hover:bg-[#E6E4DC] transition-colors"
                   >
                     <RefreshCw className="w-4 h-4" />
                     Scan Next Student
@@ -406,9 +464,9 @@ export default function ScanPortal() {
 
           {/* Security Badge */}
           <div className="mt-8 text-center">
-            <div className="inline-flex items-center gap-2 text-neutral-400 text-sm">
-              <Shield className="w-4 h-4" />
-              AES-256 Encrypted Verification
+            <div className="inline-flex items-center gap-2 text-[#999995] text-xs font-heading uppercase tracking-widest">
+              <Shield className="w-3 h-3" />
+              Secure Verification System
             </div>
           </div>
         </div>

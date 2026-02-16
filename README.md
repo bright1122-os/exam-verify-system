@@ -1,16 +1,64 @@
-# React + Vite
+# ExamVerify — Secure Exam Verification System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+ExamVerify is a modern, QR-code-based entry verification system designed specifically for educational institutions (e.g., Nigerian Universities) to digitize and secure the exam clearance process.
 
-Currently, two official plugins are available:
+![Anthropic Redesign](https://raw.githubusercontent.com/bright1122-os/exam-verify-system/main/public/banner.png) *(Placeholder for Banner)*
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🎨 Professional Redesign (Anthropic-Inspired)
+The platform recently underwent a comprehensive frontend redesign based on the **Anthropic Design System**, prioritizing readability, professional aesthetics, and high-performance user experience.
 
-## React Compiler
+- **Color Palette**: 
+  - `Parchment` (#faf9f5) for clean backgrounds.
+  - `Anthracite` (#141413) for text and deep visual elements.
+  - `Terracotta` (#d97757) for distinctive calls-to-action.
+  - `Sage` (#788c5d) for success states.
+- **Typography**: 
+  - **Poppins** for crisp, modern headings.
+  - **Lora** for elegant, readable body text.
+- **Visual Style**: Clean lines, subtle shadows, and a "Parchment-and-Ink" high-contrast aesthetic optimized for both desktop and mobile verification.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🚀 Key Features
 
-## Expanding the ESLint configuration
+### 🎓 For Students
+- **Instant Registration**: Clean, multi-step registration flow.
+- **QR Clearance**: Secure, encrypted QR code generation for exam entry.
+- **Payment Verification**: Integrated status tracking for university fees.
+- **Print-Ready Documents**: High-contrast, printable QR cards.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 🔍 For Examiners
+- **Real-Time Scanning**: Secure QR scanner with instant student verification.
+- **Entry Management**: Approve or deny entry with logged reasons.
+- **Live Stream**: WebSocket-integrated activity feed for monitoring halls.
+- **Performance Stats**: Daily and all-time verification metrics.
+
+### 🛡️ For Administrators
+- **Student Overview**: Full searchable table of all registered participants.
+- **Payment Auditing**: Monitor verification status and registration trends.
+- **Security Compliance**: AES-256 encrypted verification tokens.
+
+## 🛠️ Technology Stack
+- **Frontend**: React 19, Vite, Tailwind CSS, Framer Motion.
+- **Icons**: Lucide React.
+- **State Management**: Zustand.
+- **Notifications**: React Hot Toast (Anthropic Themed).
+- **Communication**: Socket.io for real-time examiner updates.
+
+## 📦 Getting Started
+
+### Installation
+```bash
+npm install
+```
+
+### Development
+```bash
+npm run dev
+```
+
+### Build for Production
+```bash
+npm run build
+```
+
+---
+© 2025 ExamVerify System. Digitizing Academic Integrity.

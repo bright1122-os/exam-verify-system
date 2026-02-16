@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Menu,
   X,
-  Sun,
-  Moon,
   LogOut,
   LogIn,
   UserPlus,
@@ -19,16 +17,9 @@ import { useStore } from '../../store/useStore';
 
 export const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { theme, toggleTheme, user, isAuthenticated, logout, userType } = useStore();
+  const { user, isAuthenticated, logout, userType } = useStore();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [theme]);
+  const location = useLocation();
 
   const handleLogout = () => {
     logout();
@@ -51,45 +42,46 @@ export const Navbar = () => {
 
   const links = isAuthenticated ? navLinks[userType] || [] : [];
 
+  const isActive = (path) => location.pathname === path;
+
   return (
-    <motion.nav
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      className="sticky top-0 z-50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800 shadow-sm"
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+    <nav className="sticky top-0 z-50 bg-white border-b border-parchment-dark h-16 no-print">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 h-full">
+        <div className="flex justify-between items-center h-full">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group">
-            <motion.div
-              whileHover={{ rotate: 360 }}
-              transition={{ duration: 0.6 }}
-              className="w-10 h-10 bg-gradient-to-br from-primary-600 to-primary-700 rounded-lg flex items-center justify-center shadow-lg"
-            >
-              <GraduationCap className="w-6 h-6 text-white" />
-            </motion.div>
+            <div className="w-10 h-10 bg-anthracite border-2 border-terracotta rounded-lg flex items-center justify-center">
+              <span className="font-heading font-bold text-terracotta text-lg">EV</span>
+            </div>
             <div className="hidden sm:block">
-              <h1 className="text-xl font-display font-bold text-gradient">
+              <h1 className="text-lg font-heading font-bold text-anthracite">
                 ExamVerify
               </h1>
-              <p className="text-xs text-gray-600 dark:text-gray-400">
-                Secure Exam Admission
-              </p>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-1">
             {links.map((link) => {
               const Icon = link.icon;
+              const active = isActive(link.to);
               return (
                 <Link
                   key={link.to}
                   to={link.to}
-                  className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors"
+                  className={`flex items-center gap-2 px-4 py-2 text-sm font-heading font-medium transition-colors relative ${active
+                    ? 'text-terracotta'
+                    : 'text-stone hover:text-parchment'
+                    }`}
                 >
                   <Icon className="w-4 h-4" />
                   {link.label}
+                  {active && (
+                    <motion.div
+                      layoutId="nav-indicator"
+                      className="absolute bottom-0 left-2 right-2 h-0.5 bg-terracotta rounded-full"
+                    />
+                  )}
                 </Link>
               );
             })}
@@ -97,47 +89,31 @@ export const Navbar = () => {
 
           {/* Right side actions */}
           <div className="flex items-center gap-3">
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={toggleTheme}
-              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              aria-label="Toggle theme"
-            >
-              {theme === 'light' ? (
-                <Moon className="w-5 h-5 text-gray-700" />
-              ) : (
-                <Sun className="w-5 h-5 text-gray-300" />
-              )}
-            </motion.button>
-
             {isAuthenticated ? (
-              <div className="hidden md:flex items-center gap-3">
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
-                  <div className="w-8 h-8 bg-gradient-to-br from-primary-600 to-primary-700 rounded-full flex items-center justify-center">
-                    <span className="text-white font-semibold text-sm">
-                      {user?.name?.charAt(0) || 'U'}
-                    </span>
+              <div className="flex items-center gap-3">
+                <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-[#F2F0E9] rounded-full border border-[#EBEAE5]">
+                  <div className="w-8 h-8 bg-[#D97757] rounded-full flex items-center justify-center text-[#FAF9F5] font-heading font-semibold text-sm">
+                    {user?.user_metadata?.name?.charAt(0).toUpperCase() || 'U'}
                   </div>
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {user?.name || 'User'}
+                  <span className="text-sm font-heading font-medium text-[#141413] pr-2">
+                    {user?.user_metadata?.name || 'User'}
                   </span>
                 </div>
-                <motion.button
-                  whileTap={{ scale: 0.9 }}
+                <button
                   onClick={handleLogout}
-                  className="p-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  className="p-2 rounded-full text-[#666660] hover:text-[#CC5555] hover:bg-[#CC5555]/10 transition-colors"
                   aria-label="Logout"
                 >
                   <LogOut className="w-5 h-5" />
-                </motion.button>
+                </button>
               </div>
             ) : (
-              <div className="hidden md:flex items-center gap-2">
+              <div className="hidden md:flex items-center gap-3">
                 <Link to="/auth/login">
                   <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center gap-1.5 px-5 py-2 text-sm font-heading font-medium text-[#141413] hover:text-[#D97757] transition-colors"
                   >
                     <LogIn className="w-4 h-4" />
                     Sign In
@@ -145,9 +121,9 @@ export const Navbar = () => {
                 </Link>
                 <Link to="/auth/signup">
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-lg transition-colors"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center gap-1.5 px-5 py-2 bg-[#141413] hover:bg-[#333331] text-[#FAF9F5] text-sm font-heading font-medium rounded-full transition-colors shadow-sm"
                   >
                     <UserPlus className="w-4 h-4" />
                     Sign Up
@@ -156,80 +132,102 @@ export const Navbar = () => {
               </div>
             )}
 
+            {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              aria-label="Toggle menu"
+              className="md:hidden p-2 rounded-lg text-[#141413] hover:bg-[#F2F0E9] transition-colors"
             >
-              {mobileMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile menu */}
-      {mobileMenuOpen && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          exit={{ opacity: 0, height: 0 }}
-          className="md:hidden border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
-        >
-          <div className="px-4 py-4 space-y-3">
-            {!isAuthenticated && (
-              <>
-                <Link
-                  to="/auth/login"
+      {/* Mobile menu — slide-in from right */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/40 z-40 md:hidden"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed top-0 right-0 bottom-0 w-72 bg-anthracite z-50 md:hidden overflow-y-auto"
+            >
+              <div className="p-6">
+                <button
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  className="mb-6 p-2 rounded-lg text-stone hover:text-parchment transition-colors"
                 >
-                  <LogIn className="w-5 h-5" />
-                  <span className="font-medium">Sign In</span>
-                </Link>
-                <Link
-                  to="/auth/signup"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary-600 text-white font-medium"
-                >
-                  <UserPlus className="w-5 h-5" />
-                  <span>Sign Up</span>
-                </Link>
-              </>
-            )}
-            {links.map((link) => {
-              const Icon = link.icon;
-              return (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                >
-                  <Icon className="w-5 h-5" />
-                  <span className="font-medium">{link.label}</span>
-                </Link>
-              );
-            })}
+                  <X className="w-6 h-6" />
+                </button>
 
-            {isAuthenticated && (
-              <button
-                onClick={() => {
-                  handleLogout();
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-              >
-                <LogOut className="w-5 h-5" />
-                <span className="font-medium">Logout</span>
-              </button>
-            )}
-          </div>
-        </motion.div>
-      )}
-    </motion.nav>
+                <div className="space-y-2">
+                  {!isAuthenticated && (
+                    <>
+                      <Link
+                        to="/auth/login"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-stone hover:text-parchment hover:bg-white/5 transition-colors"
+                      >
+                        <LogIn className="w-5 h-5" />
+                        <span className="font-heading font-medium">Sign In</span>
+                      </Link>
+                      <Link
+                        to="/auth/signup"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg bg-terracotta text-parchment font-heading font-medium"
+                      >
+                        <UserPlus className="w-5 h-5" />
+                        <span>Sign Up</span>
+                      </Link>
+                    </>
+                  )}
+
+                  {links.map((link) => {
+                    const Icon = link.icon;
+                    const active = isActive(link.to);
+                    return (
+                      <Link
+                        key={link.to}
+                        to={link.to}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${active
+                          ? 'text-terracotta bg-white/5'
+                          : 'text-stone hover:text-parchment hover:bg-white/5'
+                          }`}
+                      >
+                        <Icon className="w-5 h-5" />
+                        <span className="font-heading font-medium">{link.label}</span>
+                      </Link>
+                    );
+                  })}
+
+                  {isAuthenticated && (
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-error hover:bg-error-50 transition-colors mt-4"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      <span className="font-heading font-medium">Logout</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </nav>
   );
 };

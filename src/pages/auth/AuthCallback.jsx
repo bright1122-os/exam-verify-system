@@ -54,7 +54,7 @@ export default function AuthCallback() {
   }, [searchParams, navigate, login]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-secondary-50 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950">
+    <div className="min-h-screen flex items-center justify-center bg-parchment">
       <LoadingSpinner size="lg" text="Completing authentication..." />
     </div>
   );

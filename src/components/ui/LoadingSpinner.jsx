@@ -10,7 +10,7 @@ export const LoadingSpinner = ({ size = 'md', text = '' }) => {
   return (
     <div className="flex flex-col items-center justify-center gap-4">
       <motion.div
-        className={`${sizes[size]} border-4 border-brand-200 border-t-brand-600 rounded-full`}
+        className={`${sizes[size]} border-4 border-sand border-t-terracotta rounded-full`}
         animate={{ rotate: 360 }}
         transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
       />
@@ -18,7 +18,7 @@ export const LoadingSpinner = ({ size = 'md', text = '' }) => {
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-gray-600 dark:text-gray-400 font-medium"
+          className="text-stone font-heading font-medium"
         >
           {text}
         </motion.p>

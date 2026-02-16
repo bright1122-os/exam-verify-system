@@ -1,55 +1,89 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { supabase } from '../lib/supabase';
 
-export const useStore = create(
-  persist(
-    (set) => ({
-      // Theme
-      theme: 'light',
-      toggleTheme: () => set((state) => ({
-        theme: state.theme === 'light' ? 'dark' : 'light'
-      })),
+export const useStore = create((set, get) => ({
+  user: null,
+  session: null,
+  isAuthenticated: false,
+  userType: null, // 'student', 'examiner', 'admin'
+  loading: true,
 
-      // Authentication
-      user: null,
-      isAuthenticated: false,
-      userType: null, // 'student', 'examiner', 'admin'
+  // Student specific data
+  studentData: null,
 
-      login: (userData, type) => set({
-        user: userData,
-        isAuthenticated: true,
-        userType: type
-      }),
+  // Initialize Auth Listener
+  initializeAuth: async () => {
+    set({ loading: true });
 
-      logout: () => {
-        localStorage.removeItem('token');
-        return set({
-          user: null,
-          isAuthenticated: false,
-          userType: null
-        });
-      },
+    // Get initial session
+    const { data: { session } } = await supabase.auth.getSession();
 
-      // Student data
-      studentData: {
-        registrationComplete: false,
-        paymentVerified: false,
-        qrGenerated: false,
-        qrUsed: false,
-      },
-
-      updateStudentData: (data) => set((state) => ({
-        studentData: { ...state.studentData, ...data }
-      })),
-
-      // Scan history for examiner
-      scanHistory: [],
-      addScanRecord: (record) => set((state) => ({
-        scanHistory: [record, ...state.scanHistory]
-      })),
-    }),
-    {
-      name: 'exam-verify-storage',
+    if (session) {
+      await get().fetchProfile(session.user.id);
+    } else {
+      set({ user: null, session: null, isAuthenticated: false, loading: false });
     }
-  )
-);
+
+    // Listen for changes
+    supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session) {
+        set({ session, user: session.user, isAuthenticated: true });
+        await get().fetchProfile(session.user.id);
+      } else {
+        set({ user: null, session: null, isAuthenticated: false, userType: null, studentData: null, loading: false });
+      }
+    });
+  },
+
+  // Fetch user profile from Supabase 'profiles' or 'students' table
+  fetchProfile: async (userId) => {
+    try {
+      // 1. Try to get role from 'profiles' table (assuming a common table for roles)
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (profile) {
+        set({ userType: profile.role });
+
+        // 2. If student, fetch specific student details
+        if (profile.role === 'student') {
+          const { data: student } = await supabase
+            .from('students')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+
+          set({ studentData: student });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  // Login
+  signIn: async (email, password) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+  },
+
+  // Sign Up
+  signUp: async (email, password, metadata = {}) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: metadata }
+    });
+    if (error) throw error;
+  },
+
+  // Logout
+  signOut: async () => {
+    await supabase.auth.signOut();
+  },
+}));

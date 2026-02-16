@@ -14,20 +14,20 @@ export const Button = ({
   className = '',
   ...props
 }) => {
-  const baseClasses = 'inline-flex items-center justify-center gap-2 font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2';
+  const baseClasses = 'inline-flex items-center justify-center gap-2 font-heading font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1';
 
   const variants = {
-    primary: 'btn-primary focus:ring-brand-500',
-    secondary: 'btn-secondary focus:ring-gray-500',
-    success: 'btn-success focus:ring-green-500',
-    outline: 'border-2 border-brand-600 text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/20 focus:ring-brand-500',
-    ghost: 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:ring-gray-500',
+    primary: 'bg-terracotta text-parchment-DEFAULT hover:bg-terracotta-dark shadow-sm hover:shadow-md focus:ring-terracotta/40',
+    secondary: 'bg-transparent border border-stone text-anthracite hover:bg-sand focus:ring-stone/40',
+    ghost: 'bg-transparent text-terracotta hover:bg-terracotta-50 focus:ring-terracotta/20',
+    success: 'px-6 py-3 bg-sage text-parchment rounded-lg shadow-sm hover:shadow-md active:scale-[0.97] focus:ring-sage/40',
+    danger: 'px-6 py-3 bg-error text-parchment rounded-lg shadow-sm hover:shadow-md active:scale-[0.97] focus:ring-error/40',
   };
 
   const sizes = {
     sm: 'px-4 py-2 text-sm',
-    md: 'px-6 py-3',
-    lg: 'px-8 py-4 text-lg',
+    md: 'px-6 py-3 text-[15px]',
+    lg: 'px-8 py-4 text-base',
   };
 
   const classes = `
@@ -42,7 +42,7 @@ export const Button = ({
   return (
     <motion.button
       whileHover={!disabled && !loading ? { scale: 1.02 } : {}}
-      whileTap={!disabled && !loading ? { scale: 0.98 } : {}}
+      whileTap={!disabled && !loading ? { scale: 0.97 } : {}}
       className={classes}
       onClick={onClick}
       disabled={disabled || loading}
