@@ -177,23 +177,28 @@ export default function Register() {
     if (currentStep === 3) {
       setLoading(true);
       try {
-        // Call Supabase Edge Function to verify payment
-        const { data, error } = await supabase.functions.invoke('verify-payment', {
-          body: {
+        // Call Vercel Serverless Function to verify payment
+        const response = await fetch('/api/verify-payment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
             rrr: paymentData.rrr,
             amount: paymentData.amount,
             user_id: user.id
-          }
+          }),
         });
 
-        if (error) {
-          // Fallback for development if function isn't deployed yet
-          console.warn('Edge Function verification failed, falling back to manual check for demo:', error);
-          if (paymentData.rrr.startsWith('RRR-')) {
-            // Demo success
+        const data = await response.json();
+
+        if (!response.ok) {
+          // Fallback for development/demo
+          console.warn('Server verification failed, checking demo mode:', data);
+          if (String(paymentData.rrr).startsWith('RRR-')) {
             toast.success('Payment verified (Demo Mode)');
           } else {
-            throw new Error('Verification service unavailable');
+            throw new Error(data.error || 'Verification service unavailable');
           }
         } else if (data && !data.success) {
           throw new Error(data.message || 'Payment verification failed');
