@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -7,61 +7,58 @@ import {
   LogOut,
   LogIn,
   UserPlus,
-  GraduationCap,
-  Home,
   QrCode,
   ScanLine,
-  LayoutDashboard
+  LayoutDashboard,
+  ShieldCheck,
+  ChevronRight
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 
 export const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, isAuthenticated, logout, userType } = useStore();
+  const { user, isAuthenticated, signOut, userType } = useStore();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut();
     navigate('/');
   };
 
   const navLinks = {
     student: [
-      { to: '/student/dashboard', label: 'Dashboard', icon: Home },
-      { to: '/student/qr-code', label: 'My QR Code', icon: QrCode },
+      { to: '/student/dashboard', label: 'Student Portal', icon: LayoutDashboard },
+      { to: '/student/qr-code', label: 'My Exam Pass', icon: QrCode },
     ],
     examiner: [
-      { to: '/examiner/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-      { to: '/examiner/scan', label: 'Scan QR', icon: ScanLine },
+      { to: '/examiner/dashboard', label: 'Examiner Dashboard', icon: LayoutDashboard },
+      { to: '/examiner/scan', label: 'Scan Terminal', icon: ScanLine },
     ],
     admin: [
-      { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+      { to: '/admin/dashboard', label: 'System Admin', icon: LayoutDashboard },
     ],
   };
 
   const links = isAuthenticated ? navLinks[userType] || [] : [];
-
   const isActive = (path) => location.pathname === path;
 
   return (
-    <nav className="sticky top-0 z-50 bg-white border-b border-parchment-dark h-16 no-print">
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 h-full">
+    <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/80 backdrop-blur-lg border-b border-slate-200/60 h-20 no-print">
+      <div className="max-w-[1200px] mx-auto px-6 h-full">
         <div className="flex justify-between items-center h-full">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-anthracite border-2 border-terracotta rounded-lg flex items-center justify-center">
-              <span className="font-heading font-bold text-terracotta text-lg">EV</span>
+          <Link to="/" className="flex items-center gap-3 transition-opacity hover:opacity-90">
+            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
+              <ShieldCheck className="w-6 h-6 text-white" />
             </div>
-            <div className="hidden sm:block">
-              <h1 className="text-lg font-heading font-bold text-anthracite">
-                ExamVerify
-              </h1>
-            </div>
+            <span className="text-xl font-heading font-bold text-slate-900 tracking-tight hidden sm:block">
+              ExamVerify
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-2">
             {links.map((link) => {
               const Icon = link.icon;
               const active = isActive(link.to);
@@ -69,39 +66,42 @@ export const Navbar = () => {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`flex items-center gap-2 px-4 py-2 text-sm font-heading font-medium transition-colors relative ${active
-                    ? 'text-terracotta'
-                    : 'text-stone hover:text-parchment'
+                  className={`flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-lg transition-all ${active
+                    ? 'bg-primary/5 text-primary'
+                    : 'text-slate-600 hover:text-primary hover:bg-primary/5'
                     }`}
                 >
                   <Icon className="w-4 h-4" />
                   {link.label}
-                  {active && (
-                    <motion.div
-                      layoutId="nav-indicator"
-                      className="absolute bottom-0 left-2 right-2 h-0.5 bg-terracotta rounded-full"
-                    />
-                  )}
                 </Link>
               );
             })}
           </div>
 
           {/* Right side actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             {isAuthenticated ? (
-              <div className="flex items-center gap-3">
-                <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-[#F2F0E9] rounded-full border border-[#EBEAE5]">
-                  <div className="w-8 h-8 bg-[#D97757] rounded-full flex items-center justify-center text-[#FAF9F5] font-heading font-semibold text-sm">
-                    {user?.user_metadata?.name?.charAt(0).toUpperCase() || 'U'}
+              <div className="flex items-center gap-4">
+                <div className="hidden md:flex items-center gap-3 pl-4 border-l border-slate-200">
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-slate-900 leading-none">
+                      {user?.user_metadata?.name || 'Authorized User'}
+                    </p>
+                    <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-1 font-bold">
+                      {userType}
+                    </p>
                   </div>
-                  <span className="text-sm font-heading font-medium text-[#141413] pr-2">
-                    {user?.user_metadata?.name || 'User'}
-                  </span>
+                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-primary border border-slate-200 shadow-sm overflow-hidden">
+                    {user?.user_metadata?.avatar_url ? (
+                        <img src={user.user_metadata.avatar_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                        <span className="font-bold">{user?.user_metadata?.full_name?.charAt(0) || user?.email?.charAt(0).toUpperCase()}</span>
+                    )}
+                  </div>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="p-2 rounded-full text-[#666660] hover:text-[#CC5555] hover:bg-[#CC5555]/10 transition-colors"
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all border border-transparent hover:border-red-100"
                   aria-label="Logout"
                 >
                   <LogOut className="w-5 h-5" />
@@ -109,25 +109,11 @@ export const Navbar = () => {
               </div>
             ) : (
               <div className="hidden md:flex items-center gap-3">
-                <Link to="/auth/login">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex items-center gap-1.5 px-5 py-2 text-sm font-heading font-medium text-[#141413] hover:text-[#D97757] transition-colors"
-                  >
-                    <LogIn className="w-4 h-4" />
-                    Sign In
-                  </motion.button>
+                <Link to="/auth/login" className="px-6 py-2.5 text-sm font-bold text-slate-700 hover:text-primary transition-colors">
+                  Sign In
                 </Link>
-                <Link to="/auth/signup">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex items-center gap-1.5 px-5 py-2 bg-[#141413] hover:bg-[#333331] text-[#FAF9F5] text-sm font-heading font-medium rounded-full transition-colors shadow-sm"
-                  >
-                    <UserPlus className="w-4 h-4" />
-                    Sign Up
-                  </motion.button>
+                <Link to="/auth/signup" className="px-6 py-2.5 bg-primary text-white text-sm font-bold rounded-lg hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.98]">
+                  Get Started
                 </Link>
               </div>
             )}
@@ -135,7 +121,7 @@ export const Navbar = () => {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-[#141413] hover:bg-[#F2F0E9] transition-colors"
+              className="md:hidden w-10 h-10 rounded-lg flex items-center justify-center text-slate-600 bg-slate-100 transition-colors"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -143,7 +129,7 @@ export const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile menu — slide-in from right */}
+      {/* Mobile menu */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <>
@@ -151,7 +137,7 @@ export const Navbar = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/40 z-40 md:hidden"
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] md:hidden"
               onClick={() => setMobileMenuOpen(false)}
             />
             <motion.div
@@ -159,70 +145,82 @@ export const Navbar = () => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-72 bg-anthracite z-50 md:hidden overflow-y-auto"
+              className="fixed top-0 right-0 bottom-0 w-[85%] max-w-sm bg-white z-[120] md:hidden shadow-2xl flex flex-col"
             >
-              <div className="p-6">
-                <button
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="mb-6 p-2 rounded-lg text-stone hover:text-parchment transition-colors"
-                >
-                  <X className="w-6 h-6" />
-                </button>
+              <div className="p-8 flex flex-col h-full">
+                <div className="flex justify-between items-center mb-12">
+                   <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                      <ShieldCheck className="w-6 h-6 text-white" />
+                    </div>
+                    <span className="text-xl font-heading font-bold text-slate-900 tracking-tight">
+                      ExamVerify
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 bg-slate-100"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
 
-                <div className="space-y-2">
+                <div className="flex-1 space-y-2">
                   {!isAuthenticated && (
-                    <>
-                      <Link
+                    <div className="grid grid-cols-1 gap-3 mb-8">
+                       <Link
                         to="/auth/login"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-stone hover:text-parchment hover:bg-white/5 transition-colors"
+                        className="flex items-center justify-between p-4 rounded-xl bg-slate-50 text-slate-900 font-bold"
                       >
-                        <LogIn className="w-5 h-5" />
-                        <span className="font-heading font-medium">Sign In</span>
+                        Sign In
+                        <ChevronRight className="w-4 h-4 text-slate-400" />
                       </Link>
                       <Link
                         to="/auth/signup"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 rounded-lg bg-terracotta text-parchment font-heading font-medium"
+                        className="flex items-center justify-between p-4 rounded-xl bg-primary text-white font-bold"
                       >
-                        <UserPlus className="w-5 h-5" />
-                        <span>Sign Up</span>
+                        Get Started
+                        <ChevronRight className="w-4 h-4 text-white/60" />
                       </Link>
-                    </>
+                    </div>
                   )}
 
-                  {links.map((link) => {
-                    const Icon = link.icon;
-                    const active = isActive(link.to);
-                    return (
-                      <Link
-                        key={link.to}
-                        to={link.to}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${active
-                          ? 'text-terracotta bg-white/5'
-                          : 'text-stone hover:text-parchment hover:bg-white/5'
-                          }`}
-                      >
-                        <Icon className="w-5 h-5" />
-                        <span className="font-heading font-medium">{link.label}</span>
-                      </Link>
-                    );
-                  })}
-
-                  {isAuthenticated && (
-                    <button
-                      onClick={() => {
-                        handleLogout();
-                        setMobileMenuOpen(false);
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-error hover:bg-error-50 transition-colors mt-4"
-                    >
-                      <LogOut className="w-5 h-5" />
-                      <span className="font-heading font-medium">Logout</span>
-                    </button>
-                  )}
+                  <div className="space-y-1">
+                    {links.map((link) => {
+                      const Icon = link.icon;
+                      const active = isActive(link.to);
+                      return (
+                        <Link
+                          key={link.to}
+                          to={link.to}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={`flex items-center gap-4 p-4 rounded-xl transition-all ${active
+                            ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                            : 'text-slate-600 hover:bg-slate-50'
+                            }`}
+                        >
+                          <Icon className="w-5 h-5" />
+                          <span className="font-bold">{link.label}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
                 </div>
+
+                {isAuthenticated && (
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-4 p-4 rounded-xl text-red-500 bg-red-50 font-bold mt-auto"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    Logout Account
+                  </button>
+                )}
               </div>
             </motion.div>
           </>
@@ -231,3 +229,4 @@ export const Navbar = () => {
     </nav>
   );
 };
+

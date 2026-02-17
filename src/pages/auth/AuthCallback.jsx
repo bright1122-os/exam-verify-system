@@ -1,61 +1,65 @@
-import { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
-import toast from 'react-hot-toast';
-import api from '../../services/api';
+import { supabase } from '../../lib/supabase';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { login } = useStore();
+  const { fetchProfile, userType } = useStore();
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const handleAuth = async () => {
+    const handleCallback = async () => {
       try {
-        const token = searchParams.get('token');
-        const role = searchParams.get('role');
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-        if (!token) {
-          toast.error('Authentication failed');
-          navigate('/');
+        if (sessionError) throw sessionError;
+        if (!session) {
+          // If no session after a brief wait, redirect to login
+          setTimeout(() => {
+            navigate('/auth/login');
+          }, 2000);
           return;
         }
 
-        // Store token
-        localStorage.setItem('token', token);
-
-        // Get user data
-        const response = await api.get('/auth/me');
-
-        // Update store
-        login(response.data.user, role);
-
-        toast.success('Welcome back!');
-
-        // Redirect based on role
-        if (role === 'student') {
-          navigate('/student/dashboard');
-        } else if (role === 'examiner') {
-          navigate('/examiner/dashboard');
-        } else if (role === 'admin') {
-          navigate('/admin/dashboard');
-        } else {
-          navigate('/');
-        }
-      } catch (error) {
-        console.error('Auth error:', error);
-        toast.error('Authentication failed');
-        navigate('/');
+        // Session exists, fetch profile to get role
+        await fetchProfile(session.user.id);
+      } catch (err) {
+        console.error('Auth callback error:', err);
+        setError(err.message);
+        setTimeout(() => navigate('/auth/login'), 3000);
       }
     };
 
-    handleAuth();
-  }, [searchParams, navigate, login]);
+    handleCallback();
+  }, [navigate, fetchProfile]);
+
+  // Once userType is loaded, redirect
+  useEffect(() => {
+    if (userType) {
+      if (userType === 'student') navigate('/student/dashboard');
+      else if (userType === 'examiner') navigate('/examiner/dashboard');
+      else if (userType === 'admin') navigate('/admin/dashboard');
+      else navigate('/');
+    } else if (userType === null) {
+      // Profile fetch finished but no role found (new social user)
+      // For now, redirect to home or a profile setup page
+      navigate('/');
+    }
+  }, [userType, navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-parchment">
-      <LoadingSpinner size="lg" text="Completing authentication..." />
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="text-center">
+        <LoadingSpinner size="lg" text="Securing your session..." />
+        {error && (
+          <p className="mt-4 text-red-500 font-medium">
+            Authentication error: {error}. Redirecting...
+          </p>
+        )}
+      </div>
     </div>
   );
 }
+

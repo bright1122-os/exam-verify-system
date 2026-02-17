@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CheckCircle, Clock, QrCode, CreditCard, User, ArrowRight, Shield, AlertTriangle } from 'lucide-react';
+import { CheckCircle, Clock, QrCode, CreditCard, User, ArrowRight, Shield, AlertTriangle, GraduationCap, FileText, ChevronRight } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { supabase } from '../../lib/supabase';
 import { PageTransition } from '../../components/layout/PageTransition';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { generateAvatar } from '../../utils/mockImages';
-import { Badge } from '../../components/ui/Badge';
 
 export default function Dashboard() {
   const { user } = useStore();
@@ -21,7 +20,7 @@ export default function Dashboard() {
         if (!user) return;
 
         // Fetch Student Data
-        const { data: studentData, error: studentError } = await supabase
+        const { data: studentData } = await supabase
           .from('students')
           .select('*')
           .eq('user_id', user.id)
@@ -32,7 +31,7 @@ export default function Dashboard() {
         }
 
         // Fetch Payment Data
-        const { data: paymentData, error: paymentError } = await supabase
+        const { data: paymentData } = await supabase
           .from('payments')
           .select('*')
           .eq('user_id', user.id)
@@ -55,7 +54,7 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FCFAF7]">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <LoadingSpinner size="lg" text="Loading dashboard..." />
       </div>
     );
@@ -63,190 +62,244 @@ export default function Dashboard() {
 
   const progressSteps = [
     {
-      title: 'Registration',
+      title: 'Profile Setup',
       completed: student?.registration_complete,
       icon: User,
+      desc: 'Personal & Academic Info'
     },
     {
-      title: 'Payment',
+      title: 'Fee Payment',
       completed: student?.payment_verified,
       icon: CreditCard,
+      desc: 'Verification via Remita'
     },
     {
-      title: 'QR Ready',
+      title: 'Exam Pass',
       completed: student?.qr_generated,
       icon: QrCode,
+      desc: 'Ready for download'
     },
   ];
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-[#FCFAF7] py-8 px-4 font-body text-[#333331]">
-        <div className="max-w-[1200px] mx-auto">
-          {/* Hero Banner */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-[#141413] rounded-2xl p-6 sm:p-8 text-[#FAF9F5] mb-8 shadow-md"
-          >
-            <div className="flex items-center gap-6">
-              <img
-                src={student?.photo_url || generateAvatar(user?.user_metadata?.name || 'Student')}
-                alt="Student"
-                className="w-20 h-20 rounded-xl object-cover border-2 border-[#D97757]"
-              />
-              <div>
-                <h1 className="text-2xl font-heading font-medium text-[#FAF9F5]">{user?.user_metadata?.name || 'Student'}</h1>
-                <p className="text-[#999995] font-heading">{student?.matric_number || 'No Matric Number'}</p>
-                <div className="flex items-center gap-2 mt-1 text-[#999995]/80 text-sm font-body">
-                  <span>{student?.department || 'Department'}</span>
-                  <span>•</span>
-                  <span>{student?.faculty || 'Faculty'}</span>
-                </div>
-              </div>
+      <div className="min-h-screen bg-slate-50 py-12 px-4 font-body text-slate-900">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-heading font-bold text-slate-900 tracking-tight">Student Dashboard</h1>
+              <p className="text-slate-500 mt-1">Manage your examination clearance status</p>
             </div>
-          </motion.div>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-full shadow-sm text-sm font-medium text-slate-600">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              System Operational
+            </div>
+          </div>
 
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Progress Tracker */}
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="bg-white border border-[#D9D9D5] rounded-lg p-6"
-              >
-                <h2 className="text-lg font-heading font-semibold text-[#141413] mb-6 pl-2 border-l-4 border-[#D97757]">
-                  Your Progress
-                </h2>
-                <div className="relative flex items-center justify-between px-4">
-                  {/* Connecting Line background */}
-                  <div className="absolute left-6 right-6 top-[22px] h-0.5 bg-[#EBEAE5] -z-0" />
+            <div className="lg:col-span-2 space-y-8">
 
-                  {progressSteps.map((step, index) => (
-                    <div key={step.title} className="relative z-10 flex flex-col items-center">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-colors duration-300 border-2 ${step.completed
-                        ? 'bg-[#788C5D] text-[#FAF9F5] border-[#788C5D]'
-                        : 'bg-[#FCFAF7] text-[#999995] border-[#EBEAE5]'
-                        }`}>
-                        {step.completed ? (
-                          <CheckCircle className="w-6 h-6" />
-                        ) : (
-                          <step.icon className="w-6 h-6" />
-                        )}
-                      </div>
-                      <span className={`text-xs font-heading font-medium ${step.completed ? 'text-[#788C5D]' : 'text-[#999995]'
-                        }`}>
-                        {step.title}
-                      </span>
-                    </div>
-                  ))}
+              {/* Profile Card */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-[24px] p-8 shadow-premium border border-slate-100 flex flex-col md:flex-row items-center md:items-start gap-8 relative overflow-hidden"
+              >
+                {/* Decorative background blur */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+
+                <img
+                  src={student?.photo_url || generateAvatar(user?.user_metadata?.name || 'Student')}
+                  alt="Student"
+                  className="w-24 h-24 rounded-2xl object-cover shadow-md border-4 border-white ring-1 ring-slate-100"
+                />
+                <div className="flex-1 text-center md:text-left z-10">
+                  <h2 className="text-2xl font-bold text-slate-900 mb-1">{user?.user_metadata?.name || 'Student'}</h2>
+                  <p className="text-slate-500 font-medium mb-4 flex items-center justify-center md:justify-start gap-2">
+                    <GraduationCap className="w-4 h-4" />
+                    {student?.matric_number || 'Matriculation Number Pending'}
+                  </p>
+
+                  <div className="flex flex-wrap justify-center md:justify-start gap-3">
+                    <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wider rounded-lg border border-slate-200">
+                      {student?.department || 'Department'}
+                    </span>
+                    <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wider rounded-lg border border-slate-200">
+                      {student?.faculty || 'Faculty'}
+                    </span>
+                    <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wider rounded-lg border border-slate-200">
+                      {student?.level || 'Level'}
+                    </span>
+                  </div>
                 </div>
               </motion.div>
 
-              {/* QR Code Ready Banner */}
-              {student?.qr_generated && (
-                <motion.div
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <Link
-                    to="/student/qr-code"
-                    className="block bg-gradient-to-r from-[#788C5D] to-[#8FA375] rounded-xl p-6 text-[#FAF9F5] hover:shadow-lg transition-all border border-[#788C5D]"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-white">
-                          <QrCode className="w-6 h-6" />
+              {/* Progress Tracker */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="bg-white rounded-[24px] p-8 shadow-premium border border-slate-100"
+              >
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                    <Shield className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900 leading-tight">Clearance Status</h2>
+                    <p className="text-slate-500 text-xs font-medium">Complete all steps to proceed</p>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  {/* Connector Line */}
+                  <div className="absolute left-[27px] top-8 bottom-8 w-0.5 bg-slate-100 -z-0" />
+
+                  <div className="space-y-8">
+                    {progressSteps.map((step, index) => (
+                      <div key={step.title} className="relative z-10 flex items-start gap-6">
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border-4 border-white shadow-sm transition-colors ${step.completed
+                          ? 'bg-success text-white ring-2 ring-success/20'
+                          : 'bg-slate-100 text-slate-400 ring-2 ring-slate-100'
+                          }`}>
+                          {step.completed ? <CheckCircle className="w-6 h-6" /> : <step.icon className="w-6 h-6" />}
                         </div>
-                        <div>
-                          <h3 className="font-heading font-semibold text-lg text-white">QR Code Ready!</h3>
-                          <p className="text-white/90 text-sm font-body">Click to view and print your exam pass</p>
+                        <div className="pt-2">
+                          <h3 className={`text-base font-bold ${step.completed ? 'text-slate-900' : 'text-slate-500'}`}>
+                            {step.title}
+                          </h3>
+                          <p className="text-sm text-slate-400 font-medium">{step.desc}</p>
                         </div>
+                        {step.completed && (
+                          <div className="ml-auto pt-2">
+                            <span className="px-2 py-1 bg-success/10 text-success text-[10px] font-bold uppercase tracking-wider rounded">
+                              Completed
+                            </span>
+                          </div>
+                        )}
                       </div>
-                      <ArrowRight className="w-6 h-6 text-white" />
-                    </div>
-                  </Link>
-                </motion.div>
-              )}
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
 
               {/* Payment Details */}
               {payment && (
                 <motion.div
-                  initial={{ opacity: 0, y: 12 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="bg-white border border-[#D9D9D5] rounded-lg p-6"
+                  transition={{ delay: 0.2 }}
+                  className="bg-white rounded-[24px] p-8 shadow-premium border border-slate-100"
                 >
-                  <h2 className="text-lg font-heading font-semibold text-[#141413] mb-4 pl-2 border-l-4 border-yellow-500">
-                    Payment Details
-                  </h2>
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600">
+                      <CreditCard className="w-5 h-5" />
+                    </div>
+                    <h2 className="text-lg font-bold text-slate-900">Payment History</h2>
+                  </div>
+
+                  <div className="bg-slate-50 rounded-xl border border-slate-200 p-5 grid grid-cols-2 md:grid-cols-4 gap-6">
                     <div>
-                      <p className="text-xs text-[#999995] font-heading uppercase tracking-wider mb-1">RRR</p>
-                      <p className="font-heading font-medium text-[#141413] text-lg">{payment.rrr}</p>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">RRR Reference</p>
+                      <p className="font-mono font-medium text-slate-900 select-all">{payment.rrr}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-[#999995] font-heading uppercase tracking-wider mb-1">Amount</p>
-                      <p className="font-heading font-medium text-[#141413] text-lg">
-                        &#8358;{payment.amount?.toLocaleString()}
-                      </p>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Amount</p>
+                      <p className="font-bold text-slate-900">₦{payment.amount?.toLocaleString()}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-[#999995] font-heading uppercase tracking-wider mb-1">Status</p>
-                      <Badge status={payment.status === 'completed' ? 'success' : 'pending'}>
-                        {payment.status === 'completed' ? 'Paid' : 'Pending'}
-                      </Badge>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Date</p>
+                      <p className="font-medium text-slate-900">{new Date(payment.created_at).toLocaleDateString()}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-[#999995] font-heading uppercase tracking-wider mb-1">Date</p>
-                      <p className="font-body text-[#141413]">
-                        {new Date(payment.created_at).toLocaleDateString()}
-                      </p>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Status</p>
+                      <span className={`inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider ${payment.status === 'verified' || payment.status === 'completed' ? 'text-success' : 'text-amber-600'
+                        }`}>
+                        {payment.status === 'verified' || payment.status === 'completed' ? 'Verified' : 'Pending'}
+                      </span>
                     </div>
                   </div>
                 </motion.div>
               )}
             </div>
 
-            {/* Sidebar */}
+            {/* Sidebar / Actions */}
             <div className="space-y-6">
-              {/* Next Steps */}
               <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="bg-[#F2F0E9]/30 rounded-lg p-6 border border-[#EBEAE5]"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="bg-slate-800 rounded-[24px] p-8 text-white shadow-xl relative overflow-hidden group"
               >
-                <h3 className="font-heading font-semibold text-[#141413] mb-4">Next Steps</h3>
-                <div className="space-y-2">
-                  {!student?.registration_complete && (
-                    <Link to="/student/register" className="flex items-center gap-3 p-3 rounded-lg bg-white border border-[#EBEAE5] hover:border-[#D97757] transition-colors group">
-                      <div className="w-8 h-8 rounded-full bg-[#FCFAF7] flex items-center justify-center text-[#D97757] group-hover:bg-[#D97757] group-hover:text-[#FCFAF7] transition-colors">
-                        <User className="w-4 h-4" />
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-[40px] -translate-y-1/2 translate-x-1/2" />
+
+                <h3 className="text-xl font-bold mb-2">Quick Actions</h3>
+                <p className="text-slate-400 text-sm mb-6">Common tasks for your exam preparation</p>
+
+                <div className="space-y-3">
+                  {!student?.qr_generated ? (
+                    <Link to="/student/register" className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all group-hover:border-white/20">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+                          <User className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="font-medium text-sm">Complete Registration</span>
                       </div>
-                      <span className="text-sm font-heading font-medium text-[#141413]">Complete registration</span>
+                      <ChevronRight className="w-4 h-4 text-slate-400" />
+                    </Link>
+                  ) : (
+                    <Link to="/student/qr-code" className="flex items-center justify-between p-4 rounded-xl bg-success/20 hover:bg-success/30 border border-success/30 transition-all">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-success flex items-center justify-center">
+                          <QrCode className="w-4 h-4 text-white" />
+                        </div>
+                        <div>
+                          <span className="font-bold text-sm block">Download Exam Pass</span>
+                          <span className="text-[10px] text-success-300 uppercase tracking-wider font-bold">Ready</span>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-white" />
                     </Link>
                   )}
-                  {!payment?.status && (
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-white border border-[#EBEAE5]">
-                      <div className="w-8 h-8 rounded-full bg-yellow-50 flex items-center justify-center text-yellow-600">
-                        <CreditCard className="w-4 h-4" />
+
+                  <button className="w-full flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-left">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center">
+                        <FileText className="w-4 h-4 text-slate-300" />
                       </div>
-                      <span className="text-sm font-heading font-medium text-[#141413]">Payment Pending</span>
+                      <span className="font-medium text-sm text-slate-300">View Guidelines</span>
                     </div>
-                  )}
-                  {student?.qr_generated && (
-                    <Link to="/student/qr-code" className="flex items-center gap-3 p-3 rounded-lg bg-white border border-[#EBEAE5] hover:border-[#D97757] transition-colors group">
-                      <div className="w-8 h-8 rounded-full bg-[#E3F2E6] flex items-center justify-center text-[#2E7D32] group-hover:bg-[#2E7D32] group-hover:text-[#FCFAF7] transition-colors">
-                        <QrCode className="w-4 h-4" />
-                      </div>
-                      <span className="text-sm font-heading font-medium text-[#141413]">Print QR code</span>
-                    </Link>
-                  )}
+                  </button>
                 </div>
+              </motion.div>
+
+              {/* Exam Tips / Info */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+                className="bg-white rounded-[24px] p-8 shadow-premium border border-slate-100"
+              >
+                <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-amber-500" />
+                  Exam Guidelines
+                </h3>
+                <ul className="space-y-4">
+                  <li className="flex gap-3 text-sm text-slate-500">
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-2 shrink-0" />
+                    <span>Ensure your exam pass is printed clearly in color.</span>
+                  </li>
+                  <li className="flex gap-3 text-sm text-slate-500">
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-2 shrink-0" />
+                    <span>Arrive 30 minutes before your scheduled time.</span>
+                  </li>
+                  <li className="flex gap-3 text-sm text-slate-500">
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-2 shrink-0" />
+                    <span>Biometric verification is mandatory at the entrance.</span>
+                  </li>
+                </ul>
               </motion.div>
             </div>
           </div>
