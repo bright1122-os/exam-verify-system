@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CheckCircle, Clock, QrCode, CreditCard, User, ArrowRight, Shield, AlertTriangle, GraduationCap, FileText, ChevronRight } from 'lucide-react';
 import { useStore } from '../../store/useStore';
-import { supabase } from '../../lib/supabase';
+import api from '../../services/api';
 import { PageTransition } from '../../components/layout/PageTransition';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { generateAvatar } from '../../utils/mockImages';
@@ -19,30 +19,15 @@ export default function Dashboard() {
       try {
         if (!user) return;
 
-        // Fetch Student Data
-        const { data: studentData } = await supabase
-          .from('students')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
+        const res = await api.get('/student/dashboard');
+        const data = res.data;
 
-        if (studentData) {
-          setStudent(studentData);
+        if (data?.student) {
+          setStudent(data.student);
         }
-
-        // Fetch Payment Data
-        const { data: paymentData } = await supabase
-          .from('payments')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
-
-        if (paymentData) {
-          setPayment(paymentData);
+        if (data?.payment) {
+          setPayment(data.payment);
         }
-
       } catch (error) {
         console.error('Dashboard fetch error:', error);
       } finally {
@@ -63,19 +48,19 @@ export default function Dashboard() {
   const progressSteps = [
     {
       title: 'Profile Setup',
-      completed: student?.registration_complete,
+      completed: student?.registrationComplete,
       icon: User,
       desc: 'Personal & Academic Info'
     },
     {
       title: 'Fee Payment',
-      completed: student?.payment_verified,
+      completed: student?.paymentVerified,
       icon: CreditCard,
       desc: 'Verification via Remita'
     },
     {
       title: 'Exam Pass',
-      completed: student?.qr_generated,
+      completed: student?.qrCodeGenerated,
       icon: QrCode,
       desc: 'Ready for download'
     },
@@ -111,15 +96,15 @@ export default function Dashboard() {
                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
                 <img
-                  src={student?.photo_url || generateAvatar(user?.user_metadata?.name || 'Student')}
+                  src={student?.photoUrl || generateAvatar(user?.name || 'Student')}
                   alt="Student"
                   className="w-24 h-24 rounded-2xl object-cover shadow-md border-4 border-white ring-1 ring-slate-100"
                 />
                 <div className="flex-1 text-center md:text-left z-10">
-                  <h2 className="text-2xl font-bold text-slate-900 mb-1">{user?.user_metadata?.name || 'Student'}</h2>
+                  <h2 className="text-2xl font-bold text-slate-900 mb-1">{user?.name || 'Student'}</h2>
                   <p className="text-slate-500 font-medium mb-4 flex items-center justify-center md:justify-start gap-2">
                     <GraduationCap className="w-4 h-4" />
-                    {student?.matric_number || 'Matriculation Number Pending'}
+                    {student?.matricNumber || 'Matriculation Number Pending'}
                   </p>
 
                   <div className="flex flex-wrap justify-center md:justify-start gap-3">
@@ -211,7 +196,7 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Date</p>
-                      <p className="font-medium text-slate-900">{new Date(payment.created_at).toLocaleDateString()}</p>
+                      <p className="font-medium text-slate-900">{new Date(payment.createdAt).toLocaleDateString()}</p>
                     </div>
                     <div>
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Status</p>
@@ -239,7 +224,7 @@ export default function Dashboard() {
                 <p className="text-slate-400 text-sm mb-6">Common tasks for your exam preparation</p>
 
                 <div className="space-y-3">
-                  {!student?.qr_generated ? (
+                  {!student?.qrCodeGenerated ? (
                     <Link to="/student/register" className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all group-hover:border-white/20">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">

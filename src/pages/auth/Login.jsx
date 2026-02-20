@@ -8,7 +8,7 @@ import { useStore } from '../../store/useStore';
 export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { signIn, signInWithGoogle, userType } = useStore();
+  const { signIn, signInWithGoogle } = useStore();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,14 +22,13 @@ export default function Login() {
 
     setLoading(true);
     try {
-      await signIn(email, password);
+      const user = await signIn(email, password);
       setAuthSuccess(true);
 
-      // Delay for success state animation
+      // Navigate based on returned user role (not stale store value)
       setTimeout(() => {
-        // Redirection handled by Store/App, but manual check here for UX
-        if (userType === 'examiner') navigate('/examiner/dashboard');
-        else if (userType === 'admin') navigate('/admin/dashboard');
+        if (user.role === 'examiner') navigate('/examiner/dashboard');
+        else if (user.role === 'admin') navigate('/admin/dashboard');
         else navigate('/student/dashboard');
       }, 1000);
 

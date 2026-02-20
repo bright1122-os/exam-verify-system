@@ -1,53 +1,44 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
-import { supabase } from '../../lib/supabase';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
-  const { fetchProfile, userType } = useStore();
+  const [searchParams] = useSearchParams();
+  const { setAuthFromToken } = useStore();
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const token = searchParams.get('token');
+        const role = searchParams.get('role');
 
-        if (sessionError) throw sessionError;
-        if (!session) {
-          // If no session after a brief wait, redirect to login
-          setTimeout(() => {
-            navigate('/auth/login');
-          }, 2000);
+        if (!token) {
+          setError('No authentication token received');
+          setTimeout(() => navigate('/auth/login'), 2000);
           return;
         }
 
-        // Session exists, fetch profile to get role
-        await fetchProfile(session.user.id);
+        // Save token and fetch user profile from backend
+        const user = await setAuthFromToken(token);
+
+        // Navigate based on role
+        const userRole = user?.role || role;
+        if (userRole === 'examiner') navigate('/examiner/dashboard', { replace: true });
+        else if (userRole === 'admin') navigate('/admin/dashboard', { replace: true });
+        else navigate('/student/dashboard', { replace: true });
+
       } catch (err) {
         console.error('Auth callback error:', err);
-        setError(err.message);
+        setError(err.message || 'Authentication failed');
         setTimeout(() => navigate('/auth/login'), 3000);
       }
     };
 
     handleCallback();
-  }, [navigate, fetchProfile]);
-
-  // Once userType is loaded, redirect
-  useEffect(() => {
-    if (userType) {
-      if (userType === 'student') navigate('/student/dashboard');
-      else if (userType === 'examiner') navigate('/examiner/dashboard');
-      else if (userType === 'admin') navigate('/admin/dashboard');
-      else navigate('/');
-    } else if (userType === null) {
-      // Profile fetch finished but no role found (new social user)
-      // For now, redirect to home or a profile setup page
-      navigate('/');
-    }
-  }, [userType, navigate]);
+  }, [navigate, searchParams, setAuthFromToken]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
@@ -62,4 +53,3 @@ export default function AuthCallback() {
     </div>
   );
 }
-

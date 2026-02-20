@@ -36,12 +36,14 @@ export default function SignUp() {
 
     setLoading(true);
     try {
-      await signUp(email, password, { name, role });
+      const user = await signUp(email, password, { name, role });
       setSuccess(true);
-      toast.success('Account created! Verification email sent.');
+      toast.success('Account created successfully!');
       setTimeout(() => {
-        navigate('/auth/login?role=' + role);
-      }, 2000);
+        if (user.role === 'examiner') navigate('/examiner/dashboard');
+        else if (user.role === 'admin') navigate('/admin/dashboard');
+        else navigate('/student/register');
+      }, 1500);
     } catch (error) {
       toast.error(error.message || 'Registration failed');
       setLoading(false);

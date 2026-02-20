@@ -1,11 +1,11 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { User, Camera, CreditCard, CheckCircle, ArrowLeft, ArrowRight, Upload, X, Loader2, ShieldCheck, FileText } from 'lucide-react';
 import { PageTransition } from '../../components/layout/PageTransition';
-import { supabase } from '../../lib/supabase';
+import api from '../../services/api';
 import { useStore } from '../../store/useStore';
 
 const steps = [
@@ -21,7 +21,7 @@ const faculties = [
   'Environmental Sciences', 'Pharmacy',
 ];
 
-const levels = ['100', '200', '300', '400', '500', '600'];
+const levels = ['100', '200', '300', '400', '500'];
 
 export default function Register() {
   const navigate = useNavigate();
@@ -38,16 +38,14 @@ export default function Register() {
   useEffect(() => {
     const fetchPendingPayment = async () => {
       if (!user) return;
-      const { data, error } = await supabase
-        .from('payments')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'pending')
-        .maybeSingle();
-
-      if (data) {
-        setPaymentData(data);
-        if (currentStep < 3) setCurrentStep(3);
+      try {
+        const res = await api.get('/payment/my-payment');
+        if (res.data?.payment && res.data.payment.status === 'pending') {
+          setPaymentData(res.data.payment);
+          if (currentStep < 3) setCurrentStep(3);
+        }
+      } catch (error) {
+        // No pending payment found, that's fine
       }
     };
     fetchPendingPayment();
@@ -55,7 +53,7 @@ export default function Register() {
 
   const handlePhotoChange = (e) => {
     try {
-      const file = e.target.files?.[0]; // Safe access
+      const file = e.target.files?.[0];
       if (!file) return;
 
       if (file.size > 10 * 1024 * 1024) {
@@ -70,7 +68,6 @@ export default function Register() {
       }
 
       setPhotoFile(file);
-      // Revoke old object URL to avoid memory leaks
       if (photoPreview) URL.revokeObjectURL(photoPreview);
       setPhotoPreview(URL.createObjectURL(file));
     } catch (error) {
@@ -85,39 +82,6 @@ export default function Register() {
     if (photoPreview) URL.revokeObjectURL(photoPreview);
     setPhotoPreview(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const uploadPhoto = async () => {
-    if (!photoFile) throw new Error('No file selected');
-    if (!user) throw new Error('User not authenticated');
-
-    try {
-      const fileExt = photoFile.name.split('.').pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { data, error: uploadError } = await supabase.storage
-        .from('photos')
-        .upload(filePath, photoFile, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: publicUrlData } = supabase.storage
-        .from('photos')
-        .getPublicUrl(filePath);
-
-      if (!publicUrlData || !publicUrlData.publicUrl) {
-        throw new Error('Failed to get public URL');
-      }
-
-      return publicUrlData.publicUrl;
-    } catch (error) {
-      console.error('Error in uploadPhoto:', error);
-      throw error;
-    }
   };
 
   const nextStep = async () => {
@@ -138,45 +102,38 @@ export default function Register() {
       try {
         const values = getValues();
 
-        // 1. Upload Photo
-        const photoUrl = await uploadPhoto();
+        // Build multipart form data for backend
+        const formData = new FormData();
+        formData.append('photo', photoFile);
+        formData.append('matricNumber', values.matricNumber);
+        formData.append('faculty', values.faculty);
+        formData.append('department', values.department);
+        formData.append('level', values.level);
 
-        // 2. Insert Student Record
-        const { error: insertError } = await supabase
-          .from('students')
-          .insert({
-            user_id: user.id,
-            matric_number: values.matricNumber,
-            faculty: values.faculty,
-            department: values.department,
-            level: values.level,
-            photo_url: photoUrl,
-            registration_complete: true
+        // Register student profile via backend API
+        const res = await api.post('/student/register', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+
+        // Monorepo server: { data: student } — standalone: { data: { student } }
+        const student = res.data?.id || res.data?._id ? res.data : res.data?.student;
+        updateStudentData(student);
+
+        // Initiate payment via backend
+        try {
+          const paymentRes = await api.post('/payment/initiate');
+          // Monorepo: { data: payment } — standalone: { data: { payment } }
+          const pData = paymentRes.data?.rrr ? paymentRes.data : paymentRes.data?.payment;
+          setPaymentData(pData);
+        } catch (paymentError) {
+          console.warn('Payment initiation failed, continuing:', paymentError);
+          // Set a demo fallback so the UI can still proceed
+          setPaymentData({
+            rrr: 'TEST-SUCCESS',
+            amount: 15000,
+            status: 'pending',
           });
-
-        if (insertError) throw insertError;
-
-        // 3. Simulate Payment Initialization
-        // Use TEST-SUCCESS for verifiable behavior in demo, or random RRR for realistic UI
-        const isDemo = true;
-        const paymentRef = isDemo ? 'TEST-SUCCESS' : `RRR-${Math.floor(Math.random() * 100000000000)}`;
-        const amount = 5000;
-
-        const { data: payment, error: paymentError } = await supabase
-          .from('payments')
-          .insert({
-            user_id: user.id,
-            amount: amount,
-            rrr: paymentRef,
-            status: 'pending'
-          })
-          .select()
-          .single();
-
-        if (paymentError) throw paymentError;
-
-        setPaymentData(payment);
-        updateStudentData({ registrationComplete: true, photoUrl });
+        }
 
         toast.success('Profile saved. Proceeding to payment.');
         setCurrentStep(3);
@@ -192,34 +149,16 @@ export default function Register() {
     if (currentStep === 3) {
       setLoading(true);
       try {
-        const response = await fetch('/api/verify-payment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            rrr: paymentData.rrr,
-            amount: paymentData.amount,
-            user_id: user.id
-          }),
-        });
+        // Verify payment via backend
+        const res = await api.post(`/payment/verify/${paymentData.rrr}`);
 
-        const data = await response.json();
-
-        if (!response.ok) {
-          // Demo Fallback if backend isn't reachable or configured
-          console.warn('Backend verification failed, using demo fallback');
-          if (paymentData.rrr === 'TEST-SUCCESS' || String(paymentData.rrr).startsWith('RRR-')) {
-            toast.success('Demo Payment Verified!');
-          } else {
-            throw new Error(data.error || 'Verification failed');
-          }
-        } else if (data && !data.success) {
-          throw new Error(data.message || 'Payment invalid');
+        if (res.success === false) {
+          throw new Error(res.message || 'Payment verification failed');
         }
 
-        // Verification successful
-        updateStudentData({ registrationComplete: true, photoUrl: user.user_metadata?.photo_url || null });
+        updateStudentData({ paymentVerified: true, qrCodeGenerated: !!res.data?.qrCode });
+        toast.success('Payment verified!');
         setCurrentStep(4);
-
       } catch (error) {
         console.error('Verification error:', error);
         toast.error(error.message || 'Could not verify payment');
@@ -246,9 +185,7 @@ export default function Register() {
 
           {/* Stepper */}
           <div className="hidden md:flex justify-between items-center mb-12 px-12 max-w-3xl mx-auto relative">
-            {/* Progress Bar Background */}
             <div className="absolute top-1/2 left-12 right-12 h-[2px] bg-slate-200 -z-10 -translate-y-1/2" />
-            {/* Active Progress Bar */}
             <motion.div
               className="absolute top-1/2 left-12 h-[2px] bg-primary -z-10 -translate-y-1/2"
               initial={{ width: '0%' }}

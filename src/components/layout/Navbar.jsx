@@ -85,17 +85,17 @@ export const Navbar = () => {
                 <div className="hidden md:flex items-center gap-3 pl-4 border-l border-slate-200">
                   <div className="text-right">
                     <p className="text-sm font-bold text-slate-900 leading-none">
-                      {user?.user_metadata?.name || 'Authorized User'}
+                      {user?.name || 'Authorized User'}
                     </p>
                     <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-1 font-bold">
                       {userType}
                     </p>
                   </div>
                   <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-primary border border-slate-200 shadow-sm overflow-hidden">
-                    {user?.user_metadata?.avatar_url ? (
-                        <img src={user.user_metadata.avatar_url} alt="" className="w-full h-full object-cover" />
+                    {user?.avatar ? (
+                        <img src={user.avatar} alt="" className="w-full h-full object-cover" />
                     ) : (
-                        <span className="font-bold">{user?.user_metadata?.full_name?.charAt(0) || user?.email?.charAt(0).toUpperCase()}</span>
+                        <span className="font-bold">{user?.name?.charAt(0) || user?.email?.charAt(0).toUpperCase()}</span>
                     )}
                   </div>
                 </div>
