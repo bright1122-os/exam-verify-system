@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { User, Camera, CreditCard, CheckCircle, ArrowLeft, ArrowRight, Upload, X, Loader2, FileText } from 'lucide-react';
 import { PageTransition } from '../../components/layout/PageTransition';
-import { supabase } from '../../lib/supabase';
+import api from '../../services/api';
 import { useStore } from '../../store/useStore';
 
 const steps = [
@@ -21,7 +21,7 @@ const faculties = [
   'Environmental Sciences', 'Pharmacy',
 ];
 
-const levels = ['100', '200', '300', '400', '500', '600'];
+const levels = ['100', '200', '300', '400', '500'];
 
 export default function Register() {
   const navigate = useNavigate();
@@ -38,16 +38,14 @@ export default function Register() {
   useEffect(() => {
     const fetchPendingPayment = async () => {
       if (!user) return;
-      const { data, error } = await supabase
-        .from('payments')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'pending')
-        .maybeSingle();
-
-      if (data) {
-        setPaymentData(data);
-        if (currentStep < 3) setCurrentStep(3);
+      try {
+        const res = await api.get('/payment/my-payment');
+        if (res.data?.payment && res.data.payment.status === 'pending') {
+          setPaymentData(res.data.payment);
+          if (currentStep < 3) setCurrentStep(3);
+        }
+      } catch (error) {
+        // No pending payment found, that's fine
       }
     };
     fetchPendingPayment();
@@ -55,7 +53,7 @@ export default function Register() {
 
   const handlePhotoChange = (e) => {
     try {
-      const file = e.target.files?.[0]; // Safe access
+      const file = e.target.files?.[0];
       if (!file) return;
 
       if (file.size > 10 * 1024 * 1024) {
@@ -85,39 +83,6 @@ export default function Register() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const uploadPhoto = async () => {
-    if (!photoFile) throw new Error('No file selected');
-    if (!user) throw new Error('User not authenticated');
-
-    try {
-      const fileExt = photoFile.name.split('.').pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { data, error: uploadError } = await supabase.storage
-        .from('photos')
-        .upload(filePath, photoFile, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: publicUrlData } = supabase.storage
-        .from('photos')
-        .getPublicUrl(filePath);
-
-      if (!publicUrlData || !publicUrlData.publicUrl) {
-        throw new Error('Failed to get public URL');
-      }
-
-      return publicUrlData.publicUrl;
-    } catch (error) {
-      console.error('Error in uploadPhoto:', error);
-      throw error;
-    }
-  };
-
   const nextStep = async () => {
     if (currentStep === 1) {
       const valid = await trigger(['matricNumber', 'faculty', 'department', 'level']);
@@ -136,8 +101,13 @@ export default function Register() {
       try {
         const values = getValues();
 
-        // 1. Upload Photo
-        const photoUrl = await uploadPhoto();
+        // Build multipart form data for backend
+        const formData = new FormData();
+        formData.append('photo', photoFile);
+        formData.append('matricNumber', values.matricNumber);
+        formData.append('faculty', values.faculty);
+        formData.append('department', values.department);
+        formData.append('level', values.level);
 
         // 2. Insert Student Record
         const { error: insertError } = await supabase
@@ -189,15 +159,8 @@ export default function Register() {
     if (currentStep === 3) {
       setLoading(true);
       try {
-        const response = await fetch('/api/verify-payment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            rrr: paymentData.rrr,
-            amount: paymentData.amount,
-            user_id: user.id
-          }),
-        });
+        // Verify payment via backend
+        const res = await api.post(`/payment/verify/${paymentData.rrr}`);
 
         const data = await response.json();
 
@@ -213,10 +176,9 @@ export default function Register() {
           throw new Error(data.message || 'Payment invalid');
         }
 
-        // Verification successful
-        updateStudentData({ registrationComplete: true, photoUrl: user.user_metadata?.photo_url || null });
+        updateStudentData({ paymentVerified: true, qrCodeGenerated: !!res.data?.qrCode });
+        toast.success('Payment verified!');
         setCurrentStep(4);
-
       } catch (error) {
         console.error('Verification error:', error);
         toast.error(error.message || 'VERIFICATION FAILED', { style: { background: '#E11D48', color: '#fff', borderRadius: '0' } });

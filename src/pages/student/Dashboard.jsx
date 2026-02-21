@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useStore } from '../../store/useStore';
-import { supabase } from '../../lib/supabase';
+import api from '../../services/api';
 import { PageTransition } from '../../components/layout/PageTransition';
 import { ClearanceTicket } from '../../components/student/ClearanceTicket';
 import { INITI_EASE } from '../../lib/motion';
@@ -23,12 +23,8 @@ export default function Dashboard() {
       try {
         if (!user) return;
 
-        // Fetch Student Data
-        const { data: studentData } = await supabase
-          .from('students')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
+        const res = await api.get('/student/dashboard');
+        const data = res.data;
 
         if (studentData) {
           setStudent(studentData);

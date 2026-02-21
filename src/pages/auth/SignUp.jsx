@@ -35,12 +35,14 @@ export default function SignUp() {
 
     setLoading(true);
     try {
-      await signUp(email, password, { name, role });
+      const user = await signUp(email, password, { name, role });
       setSuccess(true);
       toast.success('Registration successful.', { style: { background: '#7A8F7C', color: '#F5F2E9', borderRadius: '100px', padding: '16px 24px' } });
       setTimeout(() => {
-        navigate('/auth/login?role=' + role);
-      }, 2000);
+        if (user.role === 'examiner') navigate('/examiner/dashboard');
+        else if (user.role === 'admin') navigate('/admin/dashboard');
+        else navigate('/student/register');
+      }, 1500);
     } catch (error) {
       toast.error(error.message || 'Registration failed.', { style: { background: '#B85C4F', color: '#F5F2E9', borderRadius: '100px', padding: '16px 24px' } });
       setLoading(false);
