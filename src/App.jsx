@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { Navbar } from './components/layout/Navbar';
+import Navbar from './components/layout/Navbar';
 import { useStore } from './store/useStore';
 import { LoadingSpinner } from './components/ui/LoadingSpinner';
 

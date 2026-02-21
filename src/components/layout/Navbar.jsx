@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 
-export const Navbar = () => {
+export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user, isAuthenticated, signOut, userType } = useStore();
@@ -53,12 +53,11 @@ export const Navbar = () => {
   // Adaptive palette based on page
   const isHome = location.pathname === '/';
   const navBackground = scrolled
-    ? 'bg-parchment/80 backdrop-blur-xl border-b border-charcoal/5 shadow-soft'
+    ? 'bg-[#f2f0e9]/90 backdrop-blur-xl border-b border-charcoal/5 shadow-soft'
     : 'bg-transparent border-b border-transparent';
 
-  // If home and not scrolled, text might need to be light or dark depending on background. 
-  // We'll assume the hero is clay, so we want light text initially, blending to dark when scrolled.
-  const textColor = isHome && !scrolled ? 'text-parchment' : 'text-charcoal';
+  // The Intiri design uses a light background, so text is always dark charcoal.
+  const textColor = 'text-charcoal';
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-[100] h-24 transition-all duration-700 ease-organic flex items-center ${navBackground} no-print`}>
@@ -123,11 +122,11 @@ export const Navbar = () => {
               </button>
             </div>
           ) : (
-            <div className={`hidden md:flex items-center gap-2 pl-6 border-l border-current/10 py-1 ${textColor}`}>
-              <Link to="/auth/login" className="px-6 py-3 rounded-full text-sm font-medium opacity-80 hover:opacity-100 hover:bg-current/5 transition-all duration-500 ease-organic">
+            <div className={`hidden md:flex items-center gap-4 pl-6 border-l border-current/10 py-1 ${textColor}`}>
+              <Link to="/auth/login" className="px-4 py-2 font-medium opacity-70 hover:opacity-100 transition-opacity tracking-widest uppercase text-xs">
                 Sign In
               </Link>
-              <Link to="/auth/signup" className={`${isHome && !scrolled ? 'bg-parchment text-clay-dark' : 'bg-charcoal text-parchment'} px-7 py-3 rounded-full text-sm font-medium hover:scale-105 transition-all duration-500 ease-organic shadow-[0_10px_30px_-10px_rgba(0,0,0,0.1)]`}>
+              <Link to="/auth/signup" className={`bg-charcoal text-[#f2f0e9] px-7 py-3.5 rounded-full text-xs tracking-widest uppercase font-medium hover:scale-105 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] shadow-[0_15px_30px_-10px_rgba(41,40,38,0.3)]`}>
                 Start Now
               </Link>
             </div>
@@ -230,4 +229,4 @@ export const Navbar = () => {
       </AnimatePresence>
     </nav>
   );
-};
+}
