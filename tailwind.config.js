@@ -7,75 +7,59 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: {
-          DEFAULT: '#1E40AF', // Deep Blue
-          light: '#3B82F6',
-          dark: '#1E3A8A',
+        clay: {
+          DEFAULT: '#CC7D63',
+          dark: '#B0664F',
+          light: '#DE9680',
         },
-        success: {
-          DEFAULT: '#10B981', // Success Green
-          light: '#34D399',
-          dark: '#059669',
-        },
-        anthracite: '#141413',
         parchment: {
-          DEFAULT: '#FDFDFC', // Cleaner neutral
-          dark: '#F3F4F6',
+          DEFAULT: '#F5F2E9',
+          dark: '#EAE6DA',
         },
-        stone: '#6B7280',
-        sand: '#F9FAFB',
-        terracotta: {
-          DEFAULT: '#1E40AF', // Mapping to primary for consistency
-          50: 'rgba(30, 64, 175, 0.08)',
-          100: 'rgba(30, 64, 175, 0.12)',
-          200: 'rgba(30, 64, 175, 0.2)',
+        charcoal: {
+          DEFAULT: '#292826',
+          light: '#4A4844',
         },
+        sage: {
+          DEFAULT: '#7A8F7C',
+          light: '#A2B8A4',
+        },
+        rust: {
+          DEFAULT: '#B85C4F',
+        },
+        branding: {
+          black: '#292826',
+          white: '#FBFAF7',
+          gray: '#EAE6DA',
+          darkGray: '#8A8780',
+          emerald: '#7A8F7C', // Muted Sage for Verified
+          crimson: '#B85C4F', // Soft Rust for Denied
+          blue: '#6C849C',    // Muted Slate for Pending
+        }
       },
       fontFamily: {
-        heading: ['Lora', 'Georgia', 'serif'],
+        heading: ['Newsreader', 'Georgia', 'serif'],
         body: ['Inter', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
       },
       borderRadius: {
-        sm: '4px',
-        md: '8px',
-        lg: '12px',
-        xl: '24px',
+        '2xl': '1rem',
+        '3xl': '1.5rem',
+        '4xl': '2.5rem',
       },
       boxShadow: {
-        premium: '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 10px -2px rgba(0, 0, 0, 0.03)',
-        'premium-hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+        'soft': '0 20px 40px -15px rgba(41, 40, 38, 0.05)',
+        'float': '0 30px 60px -20px rgba(41, 40, 38, 0.1)',
+        // Keeping brutalist keys but overriding them so we don't break existing components immediately, 
+        // though we will migrate them.
+        'brutal': '0 20px 40px -15px rgba(41, 40, 38, 0.05)',
+        'brutal-sm': '0 10px 20px -10px rgba(41, 40, 38, 0.05)',
+        'brutal-lg': '0 30px 60px -20px rgba(41, 40, 38, 0.1)',
       },
-      animation: {
-        'fade-in': 'fadeIn 0.4s ease-out',
-        'slide-up': 'slideUp 0.5s ease-out',
-        'slide-down': 'slideDown 0.4s ease-out',
-        'scale-in': 'scaleIn 0.3s ease-out',
-        'shimmer': 'shimmer 2s linear infinite',
-      },
-      keyframes: {
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-        slideUp: {
-          '0%': { transform: 'translateY(20px)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
-        },
-        slideDown: {
-          '0%': { transform: 'translateY(-20px)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
-        },
-        scaleIn: {
-          '0%': { transform: 'scale(0.95)', opacity: '0' },
-          '100%': { transform: 'scale(1)', opacity: '1' },
-        },
-        shimmer: {
-          '0%': { backgroundPosition: '-200% 0' },
-          '100%': { backgroundPosition: '200% 0' },
-        },
-      },
+      transitionTimingFunction: {
+        'organic': 'cubic-bezier(0.25, 1, 0.35, 1)',
+      }
     },
   },
   plugins: [],
 }
-

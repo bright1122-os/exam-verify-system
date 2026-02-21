@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import jsQR from 'jsqr';
-import { Camera, QrCode, CheckCircle, XCircle, RefreshCw, User, Shield, ArrowLeft, Search, Keyboard } from 'lucide-react';
+import { Shield, Search, X, Check, XCircle, FileWarning } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useStore } from '../../store/useStore';
@@ -15,17 +15,15 @@ export default function ScanPortal() {
   const canvasRef = useRef(null);
   const animationRef = useRef(null);
   const [scanning, setScanning] = useState(false);
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState(null); // success, student, message
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState('scan'); // 'scan' or 'manual'
   const [manualInput, setManualInput] = useState('');
 
   // Verification States
-  const [showApproveForm, setShowApproveForm] = useState(false);
-  const [showDenyForm, setShowDenyForm] = useState(false);
   const [examHall, setExamHall] = useState('');
-  const [notes, setNotes] = useState('');
   const [denialReason, setDenialReason] = useState('');
+  const [bottomSheetMode, setBottomSheetMode] = useState('none'); // 'none', 'approve', 'deny'
 
   const startCamera = useCallback(async () => {
     try {
@@ -40,7 +38,7 @@ export default function ScanPortal() {
         requestAnimationFrame(tick);
       }
     } catch (err) {
-      toast.error('Camera access denied. Please enable camera permissions.');
+      toast.error('Unable to access camera', { style: { background: '#B85C4F', color: '#F5F2E9', borderRadius: '100px', padding: '16px 24px' } });
       console.error('Camera error:', err);
     }
   }, [mode]);
@@ -89,23 +87,20 @@ export default function ScanPortal() {
 
   const handleQRDetected = async (qrDataString) => {
     stopCamera();
-    if (navigator.vibrate) navigator.vibrate(200);
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // Strong haptic feedback
 
     setLoading(true);
     try {
-      console.log('Scanned Raw:', qrDataString);
       const qrData = decryptQRData(qrDataString);
-
-      if (!qrData) throw new Error('Invalid or Tampered QR Code.');
-      if (qrData.verifier !== 'exam-verify-system') throw new Error('QR Code issuing authority mismatch.');
+      if (!qrData) throw new Error('Cryptographic signature is invalid.');
+      if (qrData.verifier !== 'exam-verify-system') throw new Error('Authority mismatch. Unrecognized issuer.');
 
       await verifyStudent(qrData.id);
 
     } catch (error) {
-      console.error('Scan Error:', error);
       setResult({
         success: false,
-        message: error?.message || 'Verification failed',
+        message: error?.message || 'Verification completely failed.',
       });
     } finally {
       setLoading(false);
@@ -118,22 +113,20 @@ export default function ScanPortal() {
 
     setLoading(true);
     try {
-      // Find student by Matric Number
       const { data: student, error } = await supabase
         .from('students')
         .select('*')
         .ilike('matric_number', manualInput.trim())
         .single();
 
-      if (error || !student) throw new Error('Student not found with this Matric Number.');
+      if (error || !student) throw new Error('Identity not found in network.');
 
       await verifyStudent(student.id);
 
     } catch (error) {
-      console.error('Manual Verify Error:', error);
       setResult({
         success: false,
-        message: error?.message || 'Verification failed',
+        message: error?.message || 'Verification completely failed.',
       });
     } finally {
       setLoading(false);
@@ -141,7 +134,6 @@ export default function ScanPortal() {
   };
 
   const verifyStudent = async (studentId) => {
-    // Fetch Student with Profile
     const { data: student, error } = await supabase
       .from('students')
       .select(`
@@ -151,27 +143,25 @@ export default function ScanPortal() {
       .eq('id', studentId)
       .single();
 
-    if (error || !student) throw new Error('Student record not found.');
-
-    // Verification Logic
-    if (!student.registration_complete) throw new Error('Student registration incomplete.');
-    if (!student.payment_verified) throw new Error('Student fees NOT verified.');
-    if (!student.qr_generated) throw new Error('Exam pass not generated.');
+    if (error || !student) throw new Error('Identity not found.');
+    if (!student.registration_complete) throw new Error('Registration is incomplete.');
+    if (!student.payment_verified) throw new Error('Financial clearance pending.');
+    if (!student.qr_generated) throw new Error('Access pass not actively generated.');
 
     setResult({
       success: true,
       student: {
         ...student,
-        name: student.profiles?.full_name || 'Student'
+        name: student.profiles?.full_name || 'Student Identity'
       },
-      message: 'Student Verified',
+      message: 'Cryptographic Clearance Granted',
     });
-    setShowApproveForm(true);
+    setBottomSheetMode('approve');
   };
 
   const handleApprove = async () => {
     if (!examHall) {
-      toast.error('Please enter the exam hall');
+      toast.error('Please assign an exam hall.', { style: { background: '#B85C4F', color: '#F5F2E9', borderRadius: '100px', padding: '16px 24px' } });
       return;
     }
 
@@ -184,17 +174,14 @@ export default function ScanPortal() {
           examiner_id: user.id,
           status: 'approved',
           exam_hall: examHall,
-          notes: notes,
           scanned_at: new Date().toISOString()
         });
 
       if (error) throw error;
-
-      toast.success('Student approved!');
+      toast.success('Entry formally approved.', { style: { background: '#7A8F7C', color: '#F5F2E9', borderRadius: '100px', padding: '16px 24px' } });
       resetScan();
     } catch (error) {
-      console.error(error);
-      toast.error(error.message || 'Approval failed');
+      toast.error('Network sync error.', { style: { background: '#B85C4F', color: '#F5F2E9', borderRadius: '100px', padding: '16px 24px' } });
     } finally {
       setLoading(false);
     }
@@ -202,7 +189,7 @@ export default function ScanPortal() {
 
   const handleDeny = async () => {
     if (!denialReason) {
-      toast.error('Please select a denial reason');
+      toast.error('A denial reason must be recorded.', { style: { background: '#B85C4F', color: '#F5F2E9', borderRadius: '100px', padding: '16px 24px' } });
       return;
     }
 
@@ -215,18 +202,15 @@ export default function ScanPortal() {
           examiner_id: user.id,
           status: 'denied',
           exam_hall: examHall || 'N/A',
-          notes: notes,
           denial_reason: denialReason,
           scanned_at: new Date().toISOString()
         });
 
       if (error) throw error;
-
-      toast.success('Entry denied');
+      toast.success('Denial forcibly logged.', { style: { background: '#B85C4F', color: '#F5F2E9', borderRadius: '100px', padding: '16px 24px' } });
       resetScan();
     } catch (error) {
-      console.error(error);
-      toast.error(error?.message || 'Denial failed');
+      toast.error('Network sync error.', { style: { background: '#B85C4F', color: '#F5F2E9', borderRadius: '100px', padding: '16px 24px' } });
     } finally {
       setLoading(false);
     }
@@ -234,290 +218,224 @@ export default function ScanPortal() {
 
   const resetScan = () => {
     setResult(null);
-    setShowApproveForm(false);
-    setShowDenyForm(false);
+    setBottomSheetMode('none');
     setExamHall('');
-    setNotes('');
     setDenialReason('');
     setManualInput('');
   };
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-slate-50 py-8 px-4 font-body text-slate-900">
-        <div className="max-w-lg mx-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <Link to="/examiner/dashboard" className="text-slate-500 hover:text-slate-900 transition-colors p-2 hover:bg-white rounded-full">
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-              Scan Portal
-            </h1>
-            <div className="w-9" />
+      <div className="min-h-screen bg-charcoal text-parchment font-body flex flex-col pt-0 pb-0 overflow-hidden relative">
+
+        {/* Top Control Bar (Soft Floating) */}
+        <div className="absolute top-6 left-6 right-6 z-50 flex justify-between items-center">
+          <Link to="/examiner/dashboard" className="w-12 h-12 bg-white/10 backdrop-blur-xl rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all shadow-float">
+            <X className="w-6 h-6" />
+          </Link>
+          <div className="flex bg-white/10 backdrop-blur-xl p-1 rounded-full shadow-float">
+            <button onClick={() => setMode('scan')} className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-500 ease-organic ${mode === 'scan' ? 'bg-white text-charcoal' : 'text-white/70 hover:text-white'}`}>
+              Scan
+            </button>
+            <button onClick={() => setMode('manual')} className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-500 ease-organic ${mode === 'manual' ? 'bg-white text-charcoal' : 'text-white/70 hover:text-white'}`}>
+              Manual
+            </button>
           </div>
+        </div>
 
-          {/* Mode Switcher */}
-          {!result && (
-            <div className="flex bg-white p-1 rounded-xl shadow-sm border border-slate-200 mb-6">
-              <button
-                onClick={() => setMode('scan')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${mode === 'scan' ? 'bg-primary text-white shadow-sm' : 'text-slate-500 hover:text-slate-900'
-                  }`}
-              >
-                <Camera className="w-4 h-4" /> Scan QR
-              </button>
-              <button
-                onClick={() => setMode('manual')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${mode === 'manual' ? 'bg-primary text-white shadow-sm' : 'text-slate-500 hover:text-slate-900'
-                  }`}
-              >
-                <Keyboard className="w-4 h-4" /> Manual Entry
-              </button>
-            </div>
-          )}
-
-          {/* Scanner / Input Area */}
-          {!result && (
+        {/* Camera or Manual View */}
+        <AnimatePresence mode="wait">
+          {!result && mode === 'scan' && (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-[24px] overflow-hidden border border-slate-200 shadow-premium min-h-[400px] flex flex-col"
+              key="scanner"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.8, ease: 'organic' }}
+              className="flex-1 relative flex flex-col justify-center items-center bg-charcoal"
             >
-              {mode === 'scan' ? (
-                <div className="relative flex-1 bg-black flex flex-col">
-                  <div className="flex-1 relative overflow-hidden">
-                    <video
-                      ref={videoRef}
-                      className="absolute inset-0 w-full h-full object-cover"
-                      playsInline
-                      muted
-                    />
-                    <canvas ref={canvasRef} className="hidden" />
+              <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover opacity-80" playsInline muted />
+              <canvas ref={canvasRef} className="hidden" />
 
-                    {/* Scanning Overlay */}
-                    {scanning && (
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="w-64 h-64 border-2 border-primary/50 rounded-3xl relative">
-                          <motion.div
-                            className="absolute left-4 right-4 h-0.5 bg-primary shadow-[0_0_15px_rgba(37,99,235,0.8)]"
-                            animate={{ top: ['10%', '90%', '10%'] }}
-                            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                          />
-                          <div className="absolute top-0 left-0 w-10 h-10 border-t-4 border-l-4 border-primary rounded-tl-2xl" />
-                          <div className="absolute top-0 right-0 w-10 h-10 border-t-4 border-r-4 border-primary rounded-tr-2xl" />
-                          <div className="absolute bottom-0 left-0 w-10 h-10 border-b-4 border-l-4 border-primary rounded-bl-2xl" />
-                          <div className="absolute bottom-0 right-0 w-10 h-10 border-b-4 border-r-4 border-primary rounded-br-2xl" />
-                        </div>
-                      </div>
-                    )}
+              {/* Soft Editorial Reticle Overlay */}
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                <div className="w-[80vw] max-w-sm aspect-square relative">
+                  {/* Corner accents */}
+                  <div className="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 border-parchment rounded-tl-[3rem] opacity-70" />
+                  <div className="absolute top-0 right-0 w-16 h-16 border-t-2 border-r-2 border-parchment rounded-tr-[3rem] opacity-70" />
+                  <div className="absolute bottom-0 left-0 w-16 h-16 border-b-2 border-l-2 border-parchment rounded-bl-[3rem] opacity-70" />
+                  <div className="absolute bottom-0 right-0 w-16 h-16 border-b-2 border-r-2 border-parchment rounded-br-[3rem] opacity-70" />
 
-                    {!scanning && !loading && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 text-white">
-                        <Camera className="w-12 h-12 text-slate-500 mb-4" />
-                        <p className="text-slate-400 font-medium">Camera is inactive</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {scanning && (
-                    <div className="p-4 bg-white text-center">
-                      <p className="text-sm text-slate-500">Align QR code within the frame</p>
-                    </div>
-                  )}
+                  {/* Scanning indicator pulse */}
+                  <motion.div
+                    animate={{ scale: [1, 1.05, 1], opacity: [0.3, 0.6, 0.3] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                    className="absolute inset-0 rounded-[3rem] border border-parchment/30 shadow-[inset_0_0_40px_rgba(245,242,233,0.1)]"
+                  />
                 </div>
-              ) : (
-                /* Manual Input Form */
-                <div className="flex-1 flex flex-col p-8">
-                  <div className="flex-1 flex flex-col items-center justify-center text-center">
-                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-6 text-slate-400">
-                      <Search className="w-8 h-8" />
-                    </div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">Search Student</h3>
-                    <p className="text-slate-500 mb-8 max-w-xs mx-auto">Enter the student's Matriculation Number to verify their clearance status manually.</p>
+              </div>
 
-                    <form onSubmit={handleManualSubmit} className="w-full max-w-xs space-y-4">
-                      <input
-                        value={manualInput}
-                        onChange={(e) => setManualInput(e.target.value)}
-                        placeholder="e.g. 2023/SCI/001"
-                        className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 font-bold text-center focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                        autoFocus
-                      />
-                      <button
-                        type="submit"
-                        disabled={!manualInput.trim() || loading}
-                        className="btn-primary w-full justify-center py-3.5"
-                      >
-                        {loading ? 'Verifying...' : 'Verify Student'}
-                      </button>
-                    </form>
-                  </div>
+              <div className="absolute bottom-16 left-0 right-0 text-center pointer-events-none flex justify-center">
+                <div className="bg-white/10 backdrop-blur-xl px-6 py-3 rounded-full flex items-center gap-3 shadow-float border border-white/10">
+                  <div className="w-2 h-2 rounded-full bg-parchment animate-pulse" />
+                  <span className="text-sm font-medium text-parchment tracking-wide">
+                    {loading ? 'Processing cipher...' : 'Align pass within frame'}
+                  </span>
                 </div>
-              )}
-
-              {loading && mode === 'scan' && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-20">
-                  <div className="text-center text-white">
-                    <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                    <p className="font-medium">Verifying...</p>
-                  </div>
-                </div>
-              )}
+              </div>
             </motion.div>
           )}
 
-          {/* Result Display */}
-          <AnimatePresence mode="wait">
-            {result && (
+          {!result && mode === 'manual' && (
+            <motion.div
+              key="manual"
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.8, ease: 'organic' }}
+              className="flex-1 flex flex-col justify-center items-center p-6 bg-parchment text-charcoal relative"
+            >
+              <div className="w-full max-w-md container-editorial p-10 bg-white shadow-float text-center">
+                <div className="w-16 h-16 bg-charcoal/5 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Search className="w-8 h-8 text-clay" />
+                </div>
+                <h2 className="text-4xl font-heading mb-3 text-charcoal">Verify Identity</h2>
+                <p className="text-charcoal-light text-sm mb-10 font-medium">Secondary lookup layer for offline or unreadable access tokens.</p>
+
+                <form onSubmit={handleManualSubmit} className="space-y-6 text-left">
+                  <div>
+                    <label className="block text-sm font-medium text-charcoal mb-2 ml-2">Matriculation Identifier</label>
+                    <input
+                      type="text"
+                      value={manualInput}
+                      onChange={(e) => setManualInput(e.target.value)}
+                      className="input-editorial bg-charcoal/5 text-center text-lg uppercase tracking-wider font-mono placeholder:lowercase"
+                      placeholder="sys/23/001"
+                    />
+                  </div>
+                  <button type="submit" disabled={loading} className="w-full btn-clay shadow-none hover:shadow-soft">
+                    {loading ? 'Interrogating Network...' : 'Query Identity Matrix'}
+                  </button>
+                </form>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Detailed Verification Overlay (The Narrative Pass) */}
+          {result && (
+            <motion.div
+              key="result"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              className={`absolute inset-0 z-[100] flex flex-col justify-end ${result.success ? 'bg-sage/90' : 'bg-rust/90'} backdrop-blur-sm`}
+            >
+              <div className="flex-1 flex flex-col items-center justify-center text-white px-6 mt-10">
+                {result.success ? (
+                  <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.2, type: 'spring' }} className="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-6 shadow-float">
+                    <Check className="w-12 h-12 text-sage" strokeWidth={3} />
+                  </motion.div>
+                ) : (
+                  <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.2, type: 'spring' }} className="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-6 shadow-float">
+                    <XCircle className="w-12 h-12 text-rust" strokeWidth={3} />
+                  </motion.div>
+                )}
+                <span className="text-5xl font-heading text-center tracking-tight leading-tight mix-blend-overlay">
+                  {result.success ? 'Clearance Verified' : 'Access Denied'}
+                </span>
+                <span className="text-lg font-medium text-white/80 mt-4 text-center max-w-sm">
+                  {result.message}
+                </span>
+              </div>
+
+              {/* Information Drawer */}
               <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                className="bg-white rounded-[24px] overflow-hidden shadow-premium border border-slate-100"
+                initial={{ y: '100%' }} animate={{ y: 0 }} transition={{ type: 'spring', damping: 25, stiffness: 200, delay: 0.3 }}
+                className="bg-parchment text-charcoal rounded-t-[3rem] w-full min-h-[50vh] flex flex-col p-8 sm:p-12 shadow-[0_-20px_40px_rgba(0,0,0,0.15)] relative max-h-[85vh] overflow-y-auto"
               >
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 w-16 h-1.5 bg-charcoal/10 rounded-full" />
+
                 {result.success ? (
                   <>
-                    <div className="bg-success p-6 text-white text-center relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
-                      <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 backdrop-blur-sm">
-                        <CheckCircle className="w-8 h-8" />
+                    <div className="flex flex-col sm:flex-row gap-8 items-center sm:items-start mb-10 pb-10 border-b border-charcoal/10">
+                      <div className="w-32 h-32 rounded-3xl bg-white shadow-soft overflow-hidden flex-shrink-0 border border-parchment-dark">
+                        {result.student.photo_url ? (
+                          <img src={result.student.photo_url} alt="Profile" className="w-full h-full object-cover" />
+                        ) : <div className="w-full h-full flex items-center justify-center font-medium text-charcoal-light/50">No Image</div>}
                       </div>
-                      <h2 className="font-heading font-bold text-2xl">Verified</h2>
-                      <p className="text-success-100 text-sm font-medium">Clearance Confirmed</p>
+                      <div className="flex flex-col text-center sm:text-left h-full justify-center">
+                        <span className="text-3xl font-heading text-charcoal mb-2">{result.student.name}</span>
+                        <span className="text-lg font-mono text-charcoal-light tracking-wide mb-4">{result.student.matric_number}</span>
+                        <div className="flex flex-wrap justify-center sm:justify-start gap-2">
+                          <span className="text-xs font-semibold uppercase tracking-widest px-3 py-1.5 bg-clay/10 text-clay rounded-full">{result.student.level} Level</span>
+                          <span className="text-xs font-semibold uppercase tracking-widest px-3 py-1.5 border border-charcoal/10 rounded-full">{result.student.department}</span>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="p-6 md:p-8">
-                      <div className="flex items-start gap-4 mb-8 pb-8 border-b border-slate-100">
-                        <div className="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden">
-                          {result.student.photo_url ? (
-                            <img src={result.student.photo_url} alt="Student" className="w-full h-full object-cover" />
-                          ) : (
-                            <User className="w-8 h-8 text-slate-400" />
-                          )}
-                        </div>
+                    {bottomSheetMode === 'approve' && (
+                      <div className="flex-1 flex flex-col gap-6">
                         <div>
-                          <h3 className="font-bold text-slate-900 text-xl leading-tight mb-1">{result.student.name}</h3>
-                          <p className="text-primary font-bold font-mono text-sm mb-2">{result.student.matric_number}</p>
-                          <div className="flex gap-2">
-                            <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded">{result.student.department}</span>
-                            <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded">{result.student.level} Lvl</span>
-                          </div>
+                          <label className="block text-sm font-medium text-charcoal mb-3 ml-2">Assign Examination Hall</label>
+                          <input
+                            value={examHall}
+                            onChange={(e) => setExamHall(e.target.value)}
+                            className="input-editorial"
+                            placeholder="e.g. Main Auditorium"
+                          />
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-4 pt-4 mt-auto">
+                          <button onClick={() => setBottomSheetMode('deny')} className="flex-1 py-4 text-rust font-medium rounded-full hover:bg-rust/10 transition-colors">
+                            Initiate Denial
+                          </button>
+                          <button onClick={handleApprove} disabled={loading} className="flex-1 bg-charcoal text-parchment font-medium py-4 rounded-full shadow-float hover:scale-[1.02] active:scale-[0.98] transition-all">
+                            {loading ? 'Syncing...' : 'Log Validation & Admit'}
+                          </button>
                         </div>
                       </div>
+                    )}
 
-                      {/* Approve Form */}
-                      {showApproveForm && !showDenyForm && (
-                        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                          <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Exam Hall</label>
-                            <input
-                              value={examHall}
-                              onChange={(e) => setExamHall(e.target.value)}
-                              className="input-premium w-full text-lg"
-                              placeholder="e.g. Hall A"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Notes (Optional)</label>
-                            <textarea
-                              value={notes}
-                              onChange={(e) => setNotes(e.target.value)}
-                              className="input-premium w-full min-h-[80px]"
-                              placeholder="Internal notes..."
-                            />
-                          </div>
-                          <div className="grid grid-cols-2 gap-4 pt-4">
-                            <button
-                              onClick={handleApprove}
-                              disabled={loading}
-                              className="btn-primary w-full justify-center py-3 bg-success hover:bg-success-600 border-success-600"
-                            >
-                              {loading ? 'Processing...' : 'Approve Entry'}
-                            </button>
-                            <button
-                              onClick={() => setShowDenyForm(true)}
-                              className="px-4 py-3 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-100 transition-colors"
-                            >
-                              Deny Entry
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Deny Form */}
-                      {showDenyForm && (
-                        <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-                          <div className="p-4 bg-red-50 rounded-xl border border-red-100 flex gap-3 text-red-700">
-                            <Shield className="w-5 h-5 shrink-0" />
-                            <p className="text-sm font-medium">You are about to deny entry to this student. This action will be logged.</p>
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Reason for Denial</label>
+                    {bottomSheetMode === 'deny' && (
+                      <div className="flex-1 flex flex-col gap-6 animate-fade-in">
+                        <div>
+                          <label className="block text-sm font-medium text-rust mb-3 ml-2">Provide Denial Rationale</label>
+                          <div className="relative">
                             <select
                               value={denialReason}
                               onChange={(e) => setDenialReason(e.target.value)}
-                              className="input-premium w-full"
+                              className="input-editorial bg-white focus:border-rust/30 appearance-none pr-10"
                             >
-                              <option value="">Select a reason...</option>
-                              <option value="photo_mismatch">Identity Mismatch (Photo)</option>
-                              <option value="expired_qr">Invalid/Expired Pass</option>
-                              <option value="wrong_exam">Wrong Exam Hall/Time</option>
-                              <option value="suspicious">Suspicious Behavior</option>
-                              <option value="other">Other</option>
+                              <option value="">Select contextual reason...</option>
+                              <option value="photo_mismatch">Identity mismatch (Photo anomaly)</option>
+                              <option value="expired_qr">Invalid or expired demographic signature</option>
+                              <option value="wrong_exam">Candidate logged for different sector</option>
+                              <option value="other">Other institutional anomaly</option>
                             </select>
-                          </div>
-                          <div className="grid grid-cols-2 gap-4 pt-4">
-                            <button
-                              onClick={() => setShowDenyForm(false)}
-                              className="px-4 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold hover:bg-slate-200 transition-colors"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              onClick={handleDeny}
-                              disabled={loading}
-                              className="px-4 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-lg shadow-red-200"
-                            >
-                              {loading ? 'Processing...' : 'Confirm Denial'}
-                            </button>
+                            <FileWarning className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-rust/50 pointer-events-none" />
                           </div>
                         </div>
-                      )}
-                    </div>
+                        <div className="flex flex-col sm:flex-row gap-4 pt-4 mt-auto">
+                          <button onClick={() => setBottomSheetMode('approve')} className="flex-1 py-4 text-charcoal font-medium rounded-full hover:bg-charcoal/5 transition-colors">
+                            Cancel Action
+                          </button>
+                          <button onClick={handleDeny} disabled={loading} className="flex-1 bg-rust text-white font-medium py-4 rounded-full shadow-float hover:bg-rust-dark active:scale-[0.98] transition-all">
+                            {loading ? 'Filing Report...' : 'Finalize Rejection'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </>
                 ) : (
-                  /* Error State */
-                  <div className="text-center p-8">
-                    <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <XCircle className="w-10 h-10 text-red-500" />
+                  <div className="flex-1 flex flex-col items-center justify-center py-10">
+                    <div className="w-16 h-16 rounded-full bg-rust/10 flex items-center justify-center mb-6">
+                      <XCircle className="w-8 h-8 text-rust" />
                     </div>
-                    <h2 className="text-2xl font-bold text-slate-900 mb-2">Verification Failed</h2>
-                    <p className="text-slate-500 font-medium mb-8 max-w-xs mx-auto">{result.message}</p>
-
-                    <button
-                      onClick={() => { resetScan(); setMode('scan'); }}
-                      className="btn-primary w-full justify-center"
-                    >
-                      <RefreshCw className="w-4 h-4 mr-2" /> Try Again
+                    <p className="font-medium text-center text-charcoal-light text-lg max-w-md leading-relaxed mb-10">
+                      The provided cryptographic signature is invalid, expired, or belongs to a candidate lacking institutional clearance.
+                    </p>
+                    <button onClick={resetScan} className="w-full sm:w-auto px-10 btn-clay bg-white border border-charcoal/5">
+                      Dismiss & Rescan
                     </button>
                   </div>
                 )}
               </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Footer security badge */}
-          {!result && (
-            <div className="mt-8 text-center">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-full text-xs font-bold text-slate-400 uppercase tracking-wider">
-                <Shield className="w-3 h-3" />
-                Secured Examiner Portal
-              </div>
-            </div>
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
       </div>
     </PageTransition>
   );

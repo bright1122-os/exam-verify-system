@@ -7,12 +7,11 @@ import {
   Clock,
   QrCode,
   Search,
-  BarChart3,
-  TrendingUp,
-  Shield
+  Shield,
+  Download,
+  Filter
 } from 'lucide-react';
 import { PageTransition } from '../../components/layout/PageTransition';
-import { Badge } from '../../components/ui/Badge';
 import { useStore } from '../../store/useStore';
 
 // Mock data for admin dashboard
@@ -22,14 +21,11 @@ const mockStudents = [
   { id: 'STU-003', name: 'Mike Johnson', matricNumber: 'IT/2021/015', department: 'Information Technology', level: '300', course: 'IT 301', paymentVerified: true, qrGenerated: false, registeredAt: '2025-01-16T09:00:00Z' },
   { id: 'STU-004', name: 'Sarah Williams', matricNumber: 'SE/2020/008', department: 'Software Engineering', level: '400', course: 'SE 402', paymentVerified: false, qrGenerated: false, registeredAt: '2025-01-16T14:30:00Z' },
   { id: 'STU-005', name: 'David Brown', matricNumber: 'CSC/2021/020', department: 'Computer Science', level: '300', course: 'CSC 301', paymentVerified: true, qrGenerated: true, registeredAt: '2025-01-17T08:15:00Z' },
-  { id: 'STU-006', name: 'Emily Davis', matricNumber: 'EE/2020/003', department: 'Electrical Engineering', level: '400', course: 'EE 405', paymentVerified: true, qrGenerated: true, registeredAt: '2025-01-17T10:45:00Z' },
-  { id: 'STU-007', name: 'Chris Wilson', matricNumber: 'ME/2021/011', department: 'Mechanical Engineering', level: '300', course: 'ME 302', paymentVerified: false, qrGenerated: false, registeredAt: '2025-01-18T13:00:00Z' },
-  { id: 'STU-008', name: 'Lisa Anderson', matricNumber: 'BA/2020/005', department: 'Business Administration', level: '400', course: 'BA 401', paymentVerified: true, qrGenerated: true, registeredAt: '2025-01-18T15:30:00Z' },
 ];
 
 const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('ALL');
   const { registeredStudents } = useStore();
 
   const allStudents = [...mockStudents, ...registeredStudents];
@@ -49,64 +45,66 @@ const AdminDashboard = () => {
         student.department?.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesFilter =
-        filterStatus === 'all' ||
-        (filterStatus === 'verified' && student.paymentVerified) ||
-        (filterStatus === 'pending' && !student.paymentVerified) ||
-        (filterStatus === 'qr' && student.qrGenerated);
+        filterStatus === 'ALL' ||
+        (filterStatus === 'VERIFIED' && student.paymentVerified) ||
+        (filterStatus === 'PENDING' && !student.paymentVerified) ||
+        (filterStatus === 'QR' && student.qrGenerated);
 
       return matchesSearch && matchesFilter;
     });
   }, [allStudents, searchTerm, filterStatus]);
 
   const statCards = [
-    { label: 'Total Students', value: stats.total, icon: Users, color: 'text-terracotta', bg: 'bg-terracotta/10' },
-    { label: 'Payment Verified', value: stats.verified, icon: CheckCircle, color: 'text-sage', bg: 'bg-sage/10' },
-    { label: 'Pending Payment', value: stats.pending, icon: Clock, color: 'text-warning', bg: 'bg-warning/10' },
-    { label: 'QR Generated', value: stats.qrGenerated, icon: QrCode, color: 'text-anthracite', bg: 'bg-stone/20' },
+    { label: 'Total Enrolled', value: stats.total, icon: Users, color: 'text-clay', bg: 'bg-clay/10' },
+    { label: 'Clearance Granted', value: stats.verified, icon: CheckCircle, color: 'text-sage', bg: 'bg-sage/10' },
+    { label: 'Pending Action', value: stats.pending, icon: Clock, color: 'text-rust', bg: 'bg-rust/10' },
+    { label: 'Passes Issued', value: stats.qrGenerated, icon: QrCode, color: 'text-charcoal-light', bg: 'bg-charcoal/5' },
   ];
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-parchment py-12">
-        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
+      <div className="min-h-screen bg-parchment py-32 px-6 font-body text-charcoal selection:bg-clay/20 selection:text-clay-dark">
+        <div className="max-w-[1200px] mx-auto">
+
+          {/* Header Block */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8 border-b border-sand pb-6"
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: 'organic' }}
+            className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8 pb-10 border-b border-parchment-dark"
           >
-            <h1 className="text-3xl font-heading font-bold text-anthracite mb-2">
-              Admin Dashboard
-            </h1>
-            <p className="text-stone font-body">
-              Overview of student registrations and verifications
-            </p>
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-soft">
+                  <Shield className="w-5 h-5 text-clay" strokeWidth={1.5} />
+                </div>
+                <span className="text-sm font-medium text-charcoal-light tracking-wide">
+                  Administrative Overview
+                </span>
+              </div>
+              <h1 className="text-5xl md:text-6xl font-heading tracking-tight leading-none text-charcoal">
+                System Ledger.
+              </h1>
+            </div>
+
+            <button className="bg-white text-charcoal-light px-6 py-3 rounded-full text-sm font-medium shadow-soft hover:shadow-float hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 ease-organic flex items-center gap-2">
+              <Download className="w-4 h-4" /> Export Report
+            </button>
           </motion.div>
 
-          {/* Stats Cards */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Stat Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-16">
             {statCards.map((stat, index) => {
               const Icon = stat.icon;
               return (
-                <motion.div
-                  key={stat.label}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <div className="card">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${stat.bg}`}>
-                        <Icon className={`w-6 h-6 ${stat.color}`} />
-                      </div>
-                      <div>
-                        <p className="text-3xl font-heading font-bold text-anthracite">
-                          {stat.value}
-                        </p>
-                        <p className="text-xs font-heading font-medium text-stone uppercase tracking-wide">
-                          {stat.label}
-                        </p>
-                      </div>
+                <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1, duration: 0.8, ease: 'organic' }}>
+                  <div className="bg-white p-8 rounded-[2rem] shadow-soft hover:shadow-float transition-all duration-500 ease-organic flex flex-col gap-6">
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center ${stat.bg}`}>
+                      <Icon className={`w-6 h-6 ${stat.color}`} strokeWidth={1.5} />
+                    </div>
+                    <div>
+                      <p className="text-4xl font-heading text-charcoal mb-1">{stat.value}</p>
+                      <p className="text-sm font-medium text-charcoal-light">
+                        {stat.label}
+                      </p>
                     </div>
                   </div>
                 </motion.div>
@@ -114,178 +112,91 @@ const AdminDashboard = () => {
             })}
           </div>
 
-          {/* Charts Placeholder */}
-          <div className="grid lg:grid-cols-2 gap-6 mb-8">
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <div className="card">
-                <div className="flex items-center gap-2 mb-6">
-                  <BarChart3 className="w-5 h-5 text-terracotta" />
-                  <h3 className="font-heading font-semibold text-anthracite">Registration Trend</h3>
-                </div>
-                <div className="h-48 flex items-center justify-center bg-sand/10 rounded-lg border border-sand border-dashed">
-                  <div className="text-center">
-                    <TrendingUp className="w-10 h-10 text-stone/50 mx-auto mb-2" />
-                    <p className="text-sm text-stone font-body">Chart visualization placeholder</p>
-                    <p className="text-xs text-stone/60 font-heading mt-1">Registrations over time</p>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
+          {/* Ledger Table Block */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 0.8, ease: 'organic' }}>
+            <div className="container-editorial">
 
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              <div className="card">
-                <div className="flex items-center gap-2 mb-6">
-                  <Shield className="w-5 h-5 text-terracotta" />
-                  <h3 className="font-heading font-semibold text-anthracite">Verification Status</h3>
-                </div>
-                <div className="h-48 flex items-center justify-center">
-                  <div className="space-y-6 w-full">
-                    <div>
-                      <div className="flex justify-between text-sm mb-2 font-heading">
-                        <span className="text-stone">Payment Verified</span>
-                        <span className="font-medium text-anthracite">
-                          {stats.total > 0 ? Math.round((stats.verified / stats.total) * 100) : 0}%
-                        </span>
-                      </div>
-                      <div className="w-full h-2 bg-sand/30 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${stats.total > 0 ? (stats.verified / stats.total) * 100 : 0}%` }}
-                          transition={{ delay: 0.6, duration: 1 }}
-                          className="h-full bg-sage rounded-full"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-sm mb-2 font-heading">
-                        <span className="text-stone">QR Generated</span>
-                        <span className="font-medium text-anthracite">
-                          {stats.total > 0 ? Math.round((stats.qrGenerated / stats.total) * 100) : 0}%
-                        </span>
-                      </div>
-                      <div className="w-full h-2 bg-sand/30 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${stats.total > 0 ? (stats.qrGenerated / stats.total) * 100 : 0}%` }}
-                          transition={{ delay: 0.8, duration: 1 }}
-                          className="h-full bg-anthracite rounded-full"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-sm mb-2 font-heading">
-                        <span className="text-stone">Pending</span>
-                        <span className="font-medium text-anthracite">
-                          {stats.total > 0 ? Math.round((stats.pending / stats.total) * 100) : 0}%
-                        </span>
-                      </div>
-                      <div className="w-full h-2 bg-sand/30 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${stats.total > 0 ? (stats.pending / stats.total) * 100 : 0}%` }}
-                          transition={{ delay: 1, duration: 1 }}
-                          className="h-full bg-warning rounded-full"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
+              {/* Table Controls */}
+              <div className="p-8 border-b border-parchment-dark flex flex-col sm:flex-row gap-6 justify-between items-center bg-white/50">
+                <h3 className="text-2xl font-heading text-charcoal flex items-center gap-3">
+                  <Filter className="w-5 h-5 text-clay" strokeWidth={1.5} /> Network Audit
+                </h3>
 
-          {/* Student Table */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-          >
-            <div className="card overflow-hidden !p-0">
-              <div className="p-6 border-b border-sand bg-parchment">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <h3 className="text-lg font-heading font-semibold text-anthracite">
-                    Registered Students
-                  </h3>
-                  <div className="flex items-center gap-3 w-full sm:w-auto">
-                    <div className="flex-1 sm:w-64 relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone" />
-                      <input
-                        className="input-field pl-10 py-2"
-                        placeholder="Search students..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </div>
-                    <select
-                      className="input-field w-auto py-2"
-                      value={filterStatus}
-                      onChange={(e) => setFilterStatus(e.target.value)}
-                    >
-                      <option value="all">All Status</option>
-                      <option value="verified">Verified</option>
-                      <option value="pending">Pending</option>
-                      <option value="qr">QR Generated</option>
-                    </select>
+                <div className="flex w-full sm:w-auto gap-4">
+                  <div className="relative flex-1 sm:w-72">
+                    <input
+                      className="w-full bg-parchment border border-transparent rounded-full px-5 py-3 text-sm font-medium placeholder:text-charcoal/40 focus:outline-none focus:bg-white focus:border-clay/20 focus:shadow-soft transition-all duration-500 ease-organic"
+                      placeholder="Search records..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-charcoal-light" />
                   </div>
+
+                  <select
+                    className="bg-parchment border border-transparent rounded-full px-5 py-3 text-sm font-medium focus:outline-none focus:bg-white focus:border-clay/20 focus:shadow-soft transition-all duration-500 ease-organic appearance-none pr-10 relative"
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                  >
+                    <option value="ALL">All Status</option>
+                    <option value="VERIFIED">Cleared</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="QR">Pass Generated</option>
+                  </select>
                 </div>
               </div>
 
-              <div className="overflow-x-auto bg-white">
-                <table className="w-full">
+              {/* Data Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-sand/20 border-b border-sand">
-                      <th className="text-left px-6 py-4 text-xs font-heading font-semibold text-stone uppercase tracking-wider">Student</th>
-                      <th className="text-left px-6 py-4 text-xs font-heading font-semibold text-stone uppercase tracking-wider">Matric No.</th>
-                      <th className="text-left px-6 py-4 text-xs font-heading font-semibold text-stone uppercase tracking-wider hidden md:table-cell">Department</th>
-                      <th className="text-left px-6 py-4 text-xs font-heading font-semibold text-stone uppercase tracking-wider">Payment</th>
-                      <th className="text-left px-6 py-4 text-xs font-heading font-semibold text-stone uppercase tracking-wider hidden sm:table-cell">QR Code</th>
-                      <th className="text-left px-6 py-4 text-xs font-heading font-semibold text-stone uppercase tracking-wider hidden lg:table-cell">Date</th>
+                    <tr className="bg-parchment/30 border-b border-parchment-dark text-charcoal-light text-xs font-semibold uppercase tracking-wider">
+                      <th className="p-6 whitespace-nowrap">Identity</th>
+                      <th className="p-6 whitespace-nowrap">Matriculation</th>
+                      <th className="p-6 whitespace-nowrap hidden md:table-cell">Department</th>
+                      <th className="p-6 whitespace-nowrap">Clearance</th>
+                      <th className="p-6 whitespace-nowrap hidden sm:table-cell">Pass Status</th>
+                      <th className="p-6 whitespace-nowrap hidden lg:table-cell">Timestamp</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-sand">
+                  <tbody className="text-sm text-charcoal font-medium">
                     {filteredStudents.map((student) => (
-                      <tr key={student.id} className="hover:bg-sand/10 transition-colors">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-anthracite rounded-full flex items-center justify-center">
-                              <span className="text-parchment text-xs font-bold font-heading">
-                                {student.name?.charAt(0) || '?'}
-                              </span>
-                            </div>
-                            <div>
-                              <p className="font-heading font-medium text-anthracite text-sm">{student.name}</p>
-                              <p className="text-xs text-stone font-body">{student.course}</p>
-                            </div>
+                      <tr key={student.id} className="border-b border-parchment hover:bg-parchment/30 transition-colors duration-300">
+                        <td className="p-6 flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-charcoal text-parchment flex items-center justify-center font-heading text-lg">
+                            {student.name?.charAt(0) || '?'}
+                          </div>
+                          <div>
+                            <div className="font-semibold text-charcoal text-base">{student.name}</div>
+                            <div className="text-xs text-charcoal-light mt-0.5">{student.course}</div>
                           </div>
                         </td>
-                        <td className="px-6 py-4">
-                          <span className="text-sm text-stone font-mono">{student.matricNumber}</span>
+                        <td className="p-6 font-mono text-charcoal-light tracking-tight whitespace-nowrap text-xs">
+                          {student.matricNumber}
                         </td>
-                        <td className="px-6 py-4 hidden md:table-cell">
-                          <span className="text-sm text-stone font-body">{student.department}</span>
+                        <td className="p-6 hidden md:table-cell text-charcoal-light max-w-[150px] truncate">
+                          {student.department}
                         </td>
-                        <td className="px-6 py-4">
-                          <Badge status={student.paymentVerified ? 'success' : 'pending'}>
-                            {student.paymentVerified ? 'Verified' : 'Pending'}
-                          </Badge>
+                        <td className="p-6 whitespace-nowrap">
+                          {student.paymentVerified ? (
+                            <span className="bg-sage/10 text-sage border border-sage/20 px-3 py-1 rounded-full text-xs font-medium">Verified</span>
+                          ) : (
+                            <span className="bg-rust/10 text-rust border border-rust/20 px-3 py-1 rounded-full text-xs font-medium">Pending</span>
+                          )}
                         </td>
-                        <td className="px-6 py-4 hidden sm:table-cell">
-                          <Badge status={student.qrGenerated ? 'success' : 'pending'}>
-                            {student.qrGenerated ? 'Generated' : 'Not Yet'}
-                          </Badge>
+                        <td className="p-6 hidden sm:table-cell whitespace-nowrap">
+                          {student.qrGenerated ? (
+                            <span className="text-charcoal flex items-center gap-2 text-xs font-medium">
+                              <span className="w-1.5 h-1.5 rounded-full bg-sage"></span> Active
+                            </span>
+                          ) : (
+                            <span className="text-charcoal-light flex items-center gap-2 text-xs font-medium opacity-60">
+                              <span className="w-1.5 h-1.5 rounded-full bg-charcoal-light"></span> Awaiting
+                            </span>
+                          )}
                         </td>
-                        <td className="px-6 py-4 hidden lg:table-cell">
-                          <span className="text-sm text-stone font-body">
-                            {student.registeredAt ? format(new Date(student.registeredAt), 'MMM dd, yyyy') : 'N/A'}
-                          </span>
+                        <td className="p-6 hidden lg:table-cell text-charcoal-light whitespace-nowrap text-xs">
+                          {student.registeredAt ? format(new Date(student.registeredAt), 'MMM dd, yyyy HH:mm') : 'N/A'}
                         </td>
                       </tr>
                     ))}
@@ -293,14 +204,17 @@ const AdminDashboard = () => {
                 </table>
 
                 {filteredStudents.length === 0 && (
-                  <div className="text-center py-12">
-                    <Users className="w-12 h-12 text-stone/30 mx-auto mb-4" />
-                    <p className="text-stone font-body">No students found matching your filters</p>
+                  <div className="text-center py-20 bg-parchment/10">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-parchment mb-4">
+                      <Search className="w-6 h-6 text-charcoal-light opacity-50" />
+                    </div>
+                    <p className="text-charcoal-light font-medium">No records found matching your query.</p>
                   </div>
                 )}
               </div>
             </div>
           </motion.div>
+
         </div>
       </div>
     </PageTransition>

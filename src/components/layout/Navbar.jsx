@@ -1,12 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Menu,
   X,
   LogOut,
-  LogIn,
-  UserPlus,
   QrCode,
   ScanLine,
   LayoutDashboard,
@@ -17,9 +15,18 @@ import { useStore } from '../../store/useStore';
 
 export const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { user, isAuthenticated, signOut, userType } = useStore();
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleLogout = async () => {
     await signOut();
@@ -28,12 +35,12 @@ export const Navbar = () => {
 
   const navLinks = {
     student: [
-      { to: '/student/dashboard', label: 'Student Portal', icon: LayoutDashboard },
-      { to: '/student/qr-code', label: 'My Exam Pass', icon: QrCode },
+      { to: '/student/dashboard', label: 'Portal', icon: LayoutDashboard },
+      { to: '/student/qr-code', label: 'Exam Pass', icon: QrCode },
     ],
     examiner: [
-      { to: '/examiner/dashboard', label: 'Examiner Dashboard', icon: LayoutDashboard },
-      { to: '/examiner/scan', label: 'Scan Terminal', icon: ScanLine },
+      { to: '/examiner/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+      { to: '/examiner/scan', label: 'Terminal', icon: ScanLine },
     ],
     admin: [
       { to: '/admin/dashboard', label: 'System Admin', icon: LayoutDashboard },
@@ -43,190 +50,184 @@ export const Navbar = () => {
   const links = isAuthenticated ? navLinks[userType] || [] : [];
   const isActive = (path) => location.pathname === path;
 
+  // Adaptive palette based on page
+  const isHome = location.pathname === '/';
+  const navBackground = scrolled
+    ? 'bg-parchment/80 backdrop-blur-xl border-b border-charcoal/5 shadow-soft'
+    : 'bg-transparent border-b border-transparent';
+
+  // If home and not scrolled, text might need to be light or dark depending on background. 
+  // We'll assume the hero is clay, so we want light text initially, blending to dark when scrolled.
+  const textColor = isHome && !scrolled ? 'text-parchment' : 'text-charcoal';
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/80 backdrop-blur-lg border-b border-slate-200/60 h-20 no-print">
-      <div className="max-w-[1200px] mx-auto px-6 h-full">
-        <div className="flex justify-between items-center h-full">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 transition-opacity hover:opacity-90">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
-              <ShieldCheck className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-xl font-heading font-bold text-slate-900 tracking-tight hidden sm:block">
-              ExamVerify
-            </span>
-          </Link>
+    <nav className={`fixed top-0 left-0 right-0 z-[100] h-24 transition-all duration-700 ease-organic flex items-center ${navBackground} no-print`}>
+      <div className="max-w-[1200px] w-full mx-auto px-6 flex justify-between items-center">
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-2">
-            {links.map((link) => {
-              const Icon = link.icon;
-              const active = isActive(link.to);
-              return (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  className={`flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-lg transition-all ${active
-                    ? 'bg-primary/5 text-primary'
-                    : 'text-slate-600 hover:text-primary hover:bg-primary/5'
-                    }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {link.label}
-                </Link>
-              );
-            })}
+        {/* Logo */}
+        <Link to="/" className={`flex items-center gap-3 group ${textColor} transition-colors duration-500`}>
+          <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-current/10 group-hover:bg-current/20 transition-colors duration-500">
+            <ShieldCheck className="w-5 h-5" strokeWidth={1.5} />
           </div>
+          <span className="text-xl font-heading font-medium tracking-tight mt-1 hidden sm:block">
+            ExamVerify
+          </span>
+        </Link>
 
-          {/* Right side actions */}
-          <div className="flex items-center gap-4">
-            {isAuthenticated ? (
-              <div className="flex items-center gap-4">
-                <div className="hidden md:flex items-center gap-3 pl-4 border-l border-slate-200">
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-slate-900 leading-none">
-                      {user?.user_metadata?.name || 'Authorized User'}
-                    </p>
-                    <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-1 font-bold">
-                      {userType}
-                    </p>
-                  </div>
-                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-primary border border-slate-200 shadow-sm overflow-hidden">
-                    {user?.user_metadata?.avatar_url ? (
-                        <img src={user.user_metadata.avatar_url} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                        <span className="font-bold">{user?.user_metadata?.full_name?.charAt(0) || user?.email?.charAt(0).toUpperCase()}</span>
-                    )}
-                  </div>
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center gap-2">
+          {links.map((link) => {
+            const active = isActive(link.to);
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-500 ease-organic ${active
+                  ? 'bg-charcoal text-parchment shadow-soft'
+                  : `${textColor} opacity-70 hover:opacity-100 hover:bg-current/5`
+                  }`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Right side actions */}
+        <div className="flex items-center gap-4">
+          {isAuthenticated ? (
+            <div className="flex items-center gap-4">
+              <div className={`hidden md:flex items-center gap-4 pl-6 border-l border-current/10 py-1 ${textColor}`}>
+                <div className="text-right">
+                  <p className="text-sm font-medium leading-none">
+                    {user?.user_metadata?.name || 'Authorized User'}
+                  </p>
+                  <p className="text-[11px] opacity-60 mt-1 capitalize font-medium">
+                    {userType}
+                  </p>
                 </div>
-                <button
-                  onClick={handleLogout}
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all border border-transparent hover:border-red-100"
-                  aria-label="Logout"
-                >
-                  <LogOut className="w-5 h-5" />
-                </button>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-current/10 text-current overflow-hidden">
+                  {user?.user_metadata?.avatar_url ? (
+                    <img src={user.user_metadata.avatar_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="font-heading font-medium text-lg">{user?.user_metadata?.full_name?.charAt(0) || user?.email?.charAt(0).toUpperCase() || '?'}</span>
+                  )}
+                </div>
               </div>
-            ) : (
-              <div className="hidden md:flex items-center gap-3">
-                <Link to="/auth/login" className="px-6 py-2.5 text-sm font-bold text-slate-700 hover:text-primary transition-colors">
-                  Sign In
-                </Link>
-                <Link to="/auth/signup" className="px-6 py-2.5 bg-primary text-white text-sm font-bold rounded-lg hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.98]">
-                  Get Started
-                </Link>
-              </div>
-            )}
+              <button
+                onClick={handleLogout}
+                className={`w-10 h-10 rounded-full flex items-center justify-center hover:bg-rust hover:text-white transition-all duration-500 ease-organic opacity-70 hover:opacity-100 ${textColor}`}
+                title="Sign Out"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+            </div>
+          ) : (
+            <div className={`hidden md:flex items-center gap-2 pl-6 border-l border-current/10 py-1 ${textColor}`}>
+              <Link to="/auth/login" className="px-6 py-3 rounded-full text-sm font-medium opacity-80 hover:opacity-100 hover:bg-current/5 transition-all duration-500 ease-organic">
+                Sign In
+              </Link>
+              <Link to="/auth/signup" className={`${isHome && !scrolled ? 'bg-parchment text-clay-dark' : 'bg-charcoal text-parchment'} px-7 py-3 rounded-full text-sm font-medium hover:scale-105 transition-all duration-500 ease-organic shadow-[0_10px_30px_-10px_rgba(0,0,0,0.1)]`}>
+                Start Now
+              </Link>
+            </div>
+          )}
 
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden w-10 h-10 rounded-lg flex items-center justify-center text-slate-600 bg-slate-100 transition-colors"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className={`md:hidden w-12 h-12 rounded-full flex items-center justify-center bg-current/10 transition-colors ${textColor}`}
+          >
+            <Menu className="w-5 h-5" />
+          </button>
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile menu (Soft Overlay) */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] md:hidden"
-              onClick={() => setMobileMenuOpen(false)}
-            />
-            <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-[85%] max-w-sm bg-white z-[120] md:hidden shadow-2xl flex flex-col"
-            >
-              <div className="p-8 flex flex-col h-full">
-                <div className="flex justify-between items-center mb-12">
-                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                      <ShieldCheck className="w-6 h-6 text-white" />
-                    </div>
-                    <span className="text-xl font-heading font-bold text-slate-900 tracking-tight">
-                      ExamVerify
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 bg-slate-100"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, ease: 'easeInOut' }}
+            className="fixed inset-0 z-[120] bg-charcoal md:hidden flex flex-col px-6 pt-10 pb-12 text-parchment"
+          >
+            <div className="flex justify-between items-center mb-16 px-2">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-parchment/10 rounded-2xl flex items-center justify-center">
+                  <ShieldCheck className="w-6 h-6 text-parchment" strokeWidth={1.5} />
                 </div>
-
-                <div className="flex-1 space-y-2">
-                  {!isAuthenticated && (
-                    <div className="grid grid-cols-1 gap-3 mb-8">
-                       <Link
-                        to="/auth/login"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center justify-between p-4 rounded-xl bg-slate-50 text-slate-900 font-bold"
-                      >
-                        Sign In
-                        <ChevronRight className="w-4 h-4 text-slate-400" />
-                      </Link>
-                      <Link
-                        to="/auth/signup"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center justify-between p-4 rounded-xl bg-primary text-white font-bold"
-                      >
-                        Get Started
-                        <ChevronRight className="w-4 h-4 text-white/60" />
-                      </Link>
-                    </div>
-                  )}
-
-                  <div className="space-y-1">
-                    {links.map((link) => {
-                      const Icon = link.icon;
-                      const active = isActive(link.to);
-                      return (
-                        <Link
-                          key={link.to}
-                          to={link.to}
-                          onClick={() => setMobileMenuOpen(false)}
-                          className={`flex items-center gap-4 p-4 rounded-xl transition-all ${active
-                            ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                            : 'text-slate-600 hover:bg-slate-50'
-                            }`}
-                        >
-                          <Icon className="w-5 h-5" />
-                          <span className="font-bold">{link.label}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {isAuthenticated && (
-                  <button
-                    onClick={() => {
-                      handleLogout();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="w-full flex items-center gap-4 p-4 rounded-xl text-red-500 bg-red-50 font-bold mt-auto"
-                  >
-                    <LogOut className="w-5 h-5" />
-                    Logout Account
-                  </button>
-                )}
+                <span className="text-2xl font-heading tracking-tight mt-1">
+                  ExamVerify
+                </span>
               </div>
-            </motion.div>
-          </>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-12 h-12 flex items-center justify-center rounded-full bg-parchment/10 text-parchment"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 flex flex-col gap-2">
+              {!isAuthenticated && (
+                <div className="flex flex-col gap-3 mb-12">
+                  <Link
+                    to="/auth/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex justify-between items-center p-6 rounded-3xl bg-charcoal-light/30 text-parchment font-medium text-lg"
+                  >
+                    Sign In
+                    <ChevronRight className="w-5 h-5 opacity-40" />
+                  </Link>
+                  <Link
+                    to="/auth/signup"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex justify-between items-center p-6 rounded-3xl bg-parchment text-charcoal font-medium text-lg"
+                  >
+                    Start Now
+                    <ChevronRight className="w-5 h-5 opacity-40" />
+                  </Link>
+                </div>
+              )}
+
+              <div className="flex flex-col gap-2">
+                {links.map((link) => {
+                  const active = isActive(link.to);
+                  return (
+                    <Link
+                      key={link.to}
+                      to={link.to}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-4 p-6 rounded-3xl transition-colors ${active
+                        ? 'bg-parchment text-charcoal'
+                        : 'text-parchment bg-charcoal-light/10 hover:bg-charcoal-light/30'
+                        }`}
+                    >
+                      <link.icon className="w-5 h-5 opacity-80" />
+                      <span className="font-medium text-lg">{link.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+
+            {isAuthenticated && (
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center justify-center gap-3 p-6 mt-12 rounded-full bg-rust/20 text-rust-light font-medium"
+              >
+                <LogOut className="w-5 h-5" />
+                Sign Out
+              </button>
+            )}
+          </motion.div>
         )}
       </AnimatePresence>
     </nav>
   );
 };
-
