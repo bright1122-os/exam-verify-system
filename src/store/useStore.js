@@ -1,110 +1,116 @@
 import { create } from 'zustand';
-import api from '../services/api';
+import { supabase } from '../lib/supabase';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
-
-// Helper: extract token+user from either response format:
-//   { token, user }          ← monorepo server
-//   { data: { token, user }} ← standalone backend
-function parseAuthResponse(res) {
-  const token = res.token ?? res.data?.token;
-  const user = res.user ?? res.data?.user;
-  return { token, user };
-}
-
-// Helper: extract user from getMe response:
-//   { data: user }          ← monorepo server (user directly in data)
-//   { data: { user } }      ← standalone backend
-function parseUserResponse(res) {
-  if (res.data?.id || res.data?._id) return res.data;      // monorepo: data IS the user
-  if (res.data?.user) return res.data.user;                 // standalone: data.user
-  return res.user ?? null;
-}
-
-export const useStore = create((set) => ({
+export const useStore = create((set, get) => ({
   user: null,
+  session: null,
   isAuthenticated: false,
-  userType: null,
+  userType: null, // 'student', 'examiner', 'admin'
   loading: true,
+
+  // Student specific data
   studentData: null,
 
-  // Initialize auth from stored token on app load
+  // Initialize Auth Listener
   initializeAuth: async () => {
     set({ loading: true });
-    const token = localStorage.getItem('token');
 
-    if (!token) {
-      set({ user: null, isAuthenticated: false, userType: null, loading: false });
-      return;
+    // Get initial session
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (session) {
+      set({ session, user: session.user, isAuthenticated: true });
+      await get().fetchProfile(session.user.id);
+    } else {
+      set({ user: null, session: null, isAuthenticated: false, loading: false });
     }
 
+    // Listen for changes
+    supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session) {
+        set({ session, user: session.user, isAuthenticated: true });
+        await get().fetchProfile(session.user.id);
+      } else {
+        set({ user: null, session: null, isAuthenticated: false, userType: null, studentData: null, loading: false });
+      }
+    });
+  },
+
+  // Fetch user profile from Supabase 'profiles' or 'students' table
+  fetchProfile: async (userId) => {
     try {
-      const res = await api.get('/auth/me');
-      const user = parseUserResponse(res);
-      set({ user, isAuthenticated: true, userType: user.role, loading: false });
+      const session = get().session;
+      let role = null;
+
+      // 1. Try to get role from 'profiles' table
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (profile) {
+        role = profile.role;
+      } else if (session?.user?.user_metadata?.role) {
+        // Fallback to metadata if profile doesn't exist yet
+        role = session.user.user_metadata.role;
+        console.log('Using metadata role:', role);
+      }
+
+      set({ userType: role });
+
+      if (role === 'student') {
+        const { data: student } = await supabase
+          .from('students')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
+
+        set({ studentData: student });
+      }
     } catch (error) {
-      localStorage.removeItem('token');
-      set({ user: null, isAuthenticated: false, userType: null, loading: false });
+      console.error('Error fetching profile:', error);
+      // Fallback to metadata in case of error
+      const session = get().session;
+      if (session?.user?.user_metadata?.role) {
+        set({ userType: session.user.user_metadata.role });
+      }
+    } finally {
+      set({ loading: false });
     }
   },
 
-  // Sign in with email/password
+  // Login
   signIn: async (email, password) => {
-    const res = await api.post('/auth/login', { email, password });
-    const { token, user } = parseAuthResponse(res);
-    localStorage.setItem('token', token);
-    set({ user, isAuthenticated: true, userType: user.role });
-    return user;
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    return data;
   },
 
-  // Sign up with email/password
+  // Google Login
+  signInWithGoogle: async (redirectTo = window.location.origin) => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${redirectTo}/auth/callback`,
+      }
+    });
+    if (error) throw error;
+  },
+
+  // Sign Up
   signUp: async (email, password, metadata = {}) => {
-    const res = await api.post('/auth/register', {
-      name: metadata.name,
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      role: metadata.role || 'student',
+      options: { data: metadata }
     });
-    const { token, user } = parseAuthResponse(res);
-    localStorage.setItem('token', token);
-    set({ user, isAuthenticated: true, userType: user.role });
-    return user;
+    if (error) throw error;
+    return data;
   },
 
-  // Google OAuth — redirect to backend
-  signInWithGoogle: () => {
-    window.location.href = `${API_BASE_URL}/auth/google`;
-  },
-
-  // Set auth from token (used by AuthCallback for Google OAuth)
-  setAuthFromToken: async (token) => {
-    localStorage.setItem('token', token);
-    try {
-      const res = await api.get('/auth/me');
-      const user = parseUserResponse(res);
-      set({ user, isAuthenticated: true, userType: user.role });
-      return user;
-    } catch (error) {
-      localStorage.removeItem('token');
-      throw error;
-    }
-  },
-
-  // Sign out
+  // Logout
   signOut: async () => {
-    try {
-      await api.post('/auth/logout');
-    } catch (e) {
-      // ignore errors
-    }
-    localStorage.removeItem('token');
-    set({ user: null, isAuthenticated: false, userType: null, studentData: null });
-  },
-
-  // Update student data in store
-  updateStudentData: (data) => {
-    set((state) => ({
-      studentData: { ...state.studentData, ...data },
-    }));
+    await supabase.auth.signOut();
   },
 }));
