@@ -6,7 +6,7 @@
 
 @layer base {
   body {
-    @apply font-body antialiased bg-parchment text-charcoal selection:bg-clay/20 selection:text-clay-dark;
+    @apply font-body antialiased bg-[#f2f0e9] text-charcoal selection:bg-charcoal/20 selection:text-charcoal;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
@@ -24,21 +24,31 @@
 
   /* Editorial Post Container */
   .container-editorial {
-    @apply bg-white rounded-4xl shadow-soft overflow-hidden;
+    @apply bg-white rounded-[2.5rem] shadow-soft overflow-hidden;
   }
 
   /* Primary Action Button - Pill shaped, soft interaction */
   .btn-primary {
-    @apply bg-charcoal text-parchment font-body font-medium rounded-full px-8 py-4 hover:bg-charcoal-light hover:shadow-float active:scale-[0.98] transition-all duration-500 ease-organic flex items-center justify-center gap-3;
+    @apply bg-charcoal text-[#f2f0e9] font-body font-medium rounded-full px-8 py-4 hover:bg-charcoal-light hover:shadow-float active:scale-[0.98] transition-all duration-500 ease-organic flex items-center justify-center gap-3;
   }
 
   /* Secondary/Clay Action Button */
   .btn-clay {
-    @apply bg-parchment text-charcoal font-body font-medium rounded-full px-8 py-4 hover:bg-white hover:shadow-float active:scale-[0.98] transition-all duration-500 ease-organic flex items-center justify-center gap-3;
+    @apply bg-[#f2f0e9] text-charcoal font-body font-medium rounded-full px-8 py-4 hover:bg-white hover:shadow-float active:scale-[0.98] transition-all duration-500 ease-organic flex items-center justify-center gap-3;
   }
 
   /* Clean Input Field */
   .input-editorial {
-    @apply w-full bg-parchment border border-transparent rounded-2xl px-6 py-4 text-charcoal font-medium placeholder:text-charcoal-light/50 focus:outline-none focus:bg-white focus:border-clay/20 focus:shadow-soft transition-all duration-500 ease-organic;
+    @apply w-full bg-[#f2f0e9] border border-transparent rounded-2xl px-6 py-4 text-charcoal font-medium placeholder:text-charcoal-light/50 focus:outline-none focus:bg-white focus:border-charcoal/20 focus:shadow-soft transition-all duration-500 ease-organic;
+  }
+}
+
+/* Accessibility: Support for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

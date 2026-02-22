@@ -55,7 +55,7 @@ const AdminDashboard = () => {
   }, [allStudents, searchTerm, filterStatus]);
 
   const statCards = [
-    { label: 'Total Enrolled', value: stats.total, icon: Users, color: 'text-clay', bg: 'bg-clay/10' },
+    { label: 'Total Enrolled', value: stats.total, icon: Users, color: 'text-charcoal', bg: 'bg-charcoal/10' },
     { label: 'Clearance Granted', value: stats.verified, icon: CheckCircle, color: 'text-sage', bg: 'bg-sage/10' },
     { label: 'Pending Action', value: stats.pending, icon: Clock, color: 'text-rust', bg: 'bg-rust/10' },
     { label: 'Passes Issued', value: stats.qrGenerated, icon: QrCode, color: 'text-charcoal-light', bg: 'bg-charcoal/5' },
@@ -63,18 +63,18 @@ const AdminDashboard = () => {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-parchment py-32 px-6 font-body text-charcoal selection:bg-clay/20 selection:text-clay-dark">
+      <div className="min-h-screen bg-[#f2f0e9] py-32 px-6 font-body text-charcoal selection:bg-charcoal/20 selection:text-charcoal">
         <div className="max-w-[1200px] mx-auto">
 
           {/* Header Block */}
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: 'organic' }}
-            className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8 pb-10 border-b border-parchment-dark"
+            className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8 pb-10 border-b border-charcoal/10"
           >
             <div>
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-soft">
-                  <Shield className="w-5 h-5 text-clay" strokeWidth={1.5} />
+                  <Shield className="w-5 h-5 text-charcoal" strokeWidth={1.5} />
                 </div>
                 <span className="text-sm font-medium text-charcoal-light tracking-wide">
                   Administrative Overview
@@ -117,15 +117,15 @@ const AdminDashboard = () => {
             <div className="container-editorial">
 
               {/* Table Controls */}
-              <div className="p-8 border-b border-parchment-dark flex flex-col sm:flex-row gap-6 justify-between items-center bg-white/50">
+              <div className="p-8 border-b border-charcoal/10 flex flex-col sm:flex-row gap-6 justify-between items-center bg-white/50">
                 <h3 className="text-2xl font-heading text-charcoal flex items-center gap-3">
-                  <Filter className="w-5 h-5 text-clay" strokeWidth={1.5} /> Network Audit
+                  <Filter className="w-5 h-5 text-charcoal" strokeWidth={1.5} /> Network Audit
                 </h3>
 
                 <div className="flex w-full sm:w-auto gap-4">
                   <div className="relative flex-1 sm:w-72">
                     <input
-                      className="w-full bg-parchment border border-transparent rounded-full px-5 py-3 text-sm font-medium placeholder:text-charcoal/40 focus:outline-none focus:bg-white focus:border-clay/20 focus:shadow-soft transition-all duration-500 ease-organic"
+                      className="w-full bg-[#f2f0e9] border border-transparent rounded-full px-5 py-3 text-sm font-medium placeholder:text-charcoal/40 focus:outline-none focus:bg-white focus:border-charcoal/20 focus:shadow-soft transition-all duration-500 ease-organic"
                       placeholder="Search records..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
@@ -134,7 +134,7 @@ const AdminDashboard = () => {
                   </div>
 
                   <select
-                    className="bg-parchment border border-transparent rounded-full px-5 py-3 text-sm font-medium focus:outline-none focus:bg-white focus:border-clay/20 focus:shadow-soft transition-all duration-500 ease-organic appearance-none pr-10 relative"
+                    className="bg-[#f2f0e9] border border-transparent rounded-full px-5 py-3 text-sm font-medium focus:outline-none focus:bg-white focus:border-charcoal/20 focus:shadow-soft transition-all duration-500 ease-organic appearance-none pr-10 relative"
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
                   >
@@ -150,7 +150,7 @@ const AdminDashboard = () => {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-parchment/30 border-b border-parchment-dark text-charcoal-light text-xs font-semibold uppercase tracking-wider">
+                    <tr className="bg-[#f2f0e9]/30 border-b border-charcoal/10 text-charcoal-light text-xs font-semibold uppercase tracking-wider">
                       <th className="p-6 whitespace-nowrap">Identity</th>
                       <th className="p-6 whitespace-nowrap">Matriculation</th>
                       <th className="p-6 whitespace-nowrap hidden md:table-cell">Department</th>
@@ -161,9 +161,9 @@ const AdminDashboard = () => {
                   </thead>
                   <tbody className="text-sm text-charcoal font-medium">
                     {filteredStudents.map((student) => (
-                      <tr key={student.id} className="border-b border-parchment hover:bg-parchment/30 transition-colors duration-300">
+                      <tr key={student.id} className="border-b border-[#f2f0e9] hover:bg-[#f2f0e9]/30 transition-colors duration-300">
                         <td className="p-6 flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-charcoal text-parchment flex items-center justify-center font-heading text-lg">
+                          <div className="w-10 h-10 rounded-full bg-charcoal text-[#f2f0e9] flex items-center justify-center font-heading text-lg">
                             {student.name?.charAt(0) || '?'}
                           </div>
                           <div>
@@ -204,8 +204,8 @@ const AdminDashboard = () => {
                 </table>
 
                 {filteredStudents.length === 0 && (
-                  <div className="text-center py-20 bg-parchment/10">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-parchment mb-4">
+                  <div className="text-center py-20 bg-[#f2f0e9]/10">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#f2f0e9] mb-4">
                       <Search className="w-6 h-6 text-charcoal-light opacity-50" />
                     </div>
                     <p className="text-charcoal-light font-medium">No records found matching your query.</p>

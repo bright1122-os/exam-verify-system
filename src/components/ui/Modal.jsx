@@ -16,7 +16,7 @@ export const Modal = ({ isOpen, onClose, title, children }) => {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-parchment rounded-xl shadow-lg max-w-md w-full max-h-[90vh] overflow-y-auto border border-sand"
+            className="bg-[#f2f0e9] rounded-xl shadow-lg max-w-md w-full max-h-[90vh] overflow-y-auto border border-sand"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-6 border-b border-sand">

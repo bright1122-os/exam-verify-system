@@ -23,10 +23,10 @@ export const ClearanceTicket = ({ student, status, onActionClick }) => {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.2, ease: INITI_EASE }}
-            className="w-full max-w-lg mx-auto container-editorial bg-parchment relative overflow-hidden shadow-[0_30px_70px_-20px_rgba(80,40,20,0.1)]"
+            className="w-full max-w-lg mx-auto container-editorial bg-[#f2f0e9] relative overflow-hidden shadow-[0_30px_70px_-20px_rgba(80,40,20,0.1)]"
         >
             {/* Elegant Background Texture / Flow */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-clay/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-charcoal/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
 
             {/* Header Block */}
             <div className={`relative z-10 px-8 py-6 border-b border-charcoal/5 flex justify-between items-center bg-white/40 backdrop-blur-sm`}>
@@ -51,7 +51,7 @@ export const ClearanceTicket = ({ student, status, onActionClick }) => {
 
             {/* Identity Block */}
             <div className="relative z-10 px-8 py-10 flex flex-col sm:flex-row gap-8 items-center sm:items-start text-center sm:text-left bg-white/20">
-                <div className="w-24 h-24 rounded-[1.5rem] border border-parchment-dark bg-white shadow-soft overflow-hidden shrink-0 flex items-center justify-center text-charcoal-light">
+                <div className="w-24 h-24 rounded-[1.5rem] border border-charcoal/10 bg-white shadow-soft overflow-hidden shrink-0 flex items-center justify-center text-charcoal-light">
                     {student?.photo_url ? (
                         <img src={student.photo_url} alt="Profile" className="w-full h-full object-cover grayscale opacity-90 transition-opacity hover:opacity-100" />
                     ) : (
@@ -66,7 +66,7 @@ export const ClearanceTicket = ({ student, status, onActionClick }) => {
                         {student?.matric_number || 'Identification Pending'}
                     </span>
                     <div className="flex flex-wrap justify-center sm:justify-start gap-2">
-                        <span className="text-xs font-semibold px-3 py-1.5 bg-charcoal text-parchment rounded-full">Level {student?.level || 'N/A'}</span>
+                        <span className="text-xs font-semibold px-3 py-1.5 bg-charcoal text-[#f2f0e9] rounded-full">Level {student?.level || 'N/A'}</span>
                         <span className="text-xs font-semibold px-3 py-1.5 border border-charcoal/10 text-charcoal rounded-full">{student?.department || 'Department N/A'}</span>
                     </div>
                 </div>
@@ -84,7 +84,7 @@ export const ClearanceTicket = ({ student, status, onActionClick }) => {
                         transition={{ delay: 0.3, duration: 1.2, ease: INITI_EASE }}
                         className="flex flex-col items-center"
                     >
-                        <div className="p-3 bg-white rounded-3xl shadow-float border border-parchment/50 relative z-20 mb-8 cursor-pointer hover:scale-[1.02] transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]" onClick={onActionClick}>
+                        <div className="p-3 bg-white rounded-3xl shadow-float border border-[#f2f0e9]/50 relative z-20 mb-8 cursor-pointer hover:scale-[1.02] transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]" onClick={onActionClick}>
                             <div className="overflow-hidden rounded-2xl pointer-events-none">
                                 <QRCodeSVG value={encryptedPayload || ''} size={150} level="H" includeMargin={true} />
                             </div>
@@ -110,7 +110,7 @@ export const ClearanceTicket = ({ student, status, onActionClick }) => {
             </div>
 
             {/* Soft decorative bottom edge */}
-            <div className="h-2 w-full bg-gradient-to-r from-clay via-sage to-clay opacity-20" />
+            <div className="h-2 w-full bg-gradient-to-r from-charcoal via-sage to-charcoal opacity-20" />
         </motion.div>
     );
 };

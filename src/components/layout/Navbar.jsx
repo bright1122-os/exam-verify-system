@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 
-export default function Navbar() {
+export const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user, isAuthenticated, signOut, userType } = useStore();
@@ -82,7 +82,7 @@ export default function Navbar() {
                 key={link.to}
                 to={link.to}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-500 ease-organic ${active
-                  ? 'bg-charcoal text-parchment shadow-soft'
+                  ? 'bg-charcoal text-[#f2f0e9] shadow-soft'
                   : `${textColor} opacity-70 hover:opacity-100 hover:bg-current/5`
                   }`}
               >
@@ -150,12 +150,12 @@ export default function Navbar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5, ease: 'easeInOut' }}
-            className="fixed inset-0 z-[120] bg-charcoal md:hidden flex flex-col px-6 pt-10 pb-12 text-parchment"
+            className="fixed inset-0 z-[120] bg-charcoal md:hidden flex flex-col px-6 pt-10 pb-12 text-[#f2f0e9]"
           >
             <div className="flex justify-between items-center mb-16 px-2">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-parchment/10 rounded-2xl flex items-center justify-center">
-                  <ShieldCheck className="w-6 h-6 text-parchment" strokeWidth={1.5} />
+                <div className="w-12 h-12 bg-[#f2f0e9]/10 rounded-2xl flex items-center justify-center">
+                  <ShieldCheck className="w-6 h-6 text-[#f2f0e9]" strokeWidth={1.5} />
                 </div>
                 <span className="text-2xl font-heading tracking-tight mt-1">
                   ExamVerify
@@ -163,7 +163,7 @@ export default function Navbar() {
               </div>
               <button
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-12 h-12 flex items-center justify-center rounded-full bg-parchment/10 text-parchment"
+                className="w-12 h-12 flex items-center justify-center rounded-full bg-[#f2f0e9]/10 text-[#f2f0e9]"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -175,7 +175,7 @@ export default function Navbar() {
                   <Link
                     to="/auth/login"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex justify-between items-center p-6 rounded-3xl bg-charcoal-light/30 text-parchment font-medium text-lg"
+                    className="flex justify-between items-center p-6 rounded-3xl bg-charcoal-light/30 text-[#f2f0e9] font-medium text-lg"
                   >
                     Sign In
                     <ChevronRight className="w-5 h-5 opacity-40" />
@@ -183,7 +183,7 @@ export default function Navbar() {
                   <Link
                     to="/auth/signup"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex justify-between items-center p-6 rounded-3xl bg-parchment text-charcoal font-medium text-lg"
+                    className="flex justify-between items-center p-6 rounded-3xl bg-[#f2f0e9] text-charcoal font-medium text-lg"
                   >
                     Start Now
                     <ChevronRight className="w-5 h-5 opacity-40" />
@@ -200,8 +200,8 @@ export default function Navbar() {
                       to={link.to}
                       onClick={() => setMobileMenuOpen(false)}
                       className={`flex items-center gap-4 p-6 rounded-3xl transition-colors ${active
-                        ? 'bg-parchment text-charcoal'
-                        : 'text-parchment bg-charcoal-light/10 hover:bg-charcoal-light/30'
+                        ? 'bg-[#f2f0e9] text-charcoal'
+                        : 'text-[#f2f0e9] bg-charcoal-light/10 hover:bg-charcoal-light/30'
                         }`}
                     >
                       <link.icon className="w-5 h-5 opacity-80" />

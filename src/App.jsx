@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import Navbar from './components/layout/Navbar';
+import { Navbar } from './components/layout/Navbar';
 import { useStore } from './store/useStore';
 import { LoadingSpinner } from './components/ui/LoadingSpinner';
 
@@ -10,6 +10,11 @@ import Home from './pages/Home';
 import AuthCallback from './pages/auth/AuthCallback';
 import Login from './pages/auth/Login';
 import SignUp from './pages/auth/SignUp';
+
+import { Footer } from './components/layout/Footer';
+import About from './pages/About';
+import Pricing from './pages/Pricing';
+import Contact from './pages/Contact';
 
 // Student Pages
 import StudentDashboard from './pages/student/Dashboard';
@@ -27,7 +32,7 @@ import AdminDashboard from './pages/admin/Dashboard';
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { isAuthenticated, userType, loading } = useStore();
 
-  if (loading) return <div className="min-h-screen bg-parchment flex items-center justify-center"><LoadingSpinner /></div>;
+  if (loading) return <div className="min-h-screen bg-[#f2f0e9] flex items-center justify-center"><LoadingSpinner /></div>;
 
   if (!isAuthenticated) {
     return <Navigate to="/auth/login" replace />;
@@ -48,17 +53,20 @@ function App() {
   }, [initializeAuth]);
 
   if (loading) {
-    return <div className="min-h-screen bg-parchment flex items-center justify-center"><LoadingSpinner /></div>;
+    return <div className="min-h-screen bg-[#f2f0e9] flex items-center justify-center"><LoadingSpinner /></div>;
   }
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-slate-50 transition-colors">
+      <div className="min-h-screen bg-[#f2f0e9] transition-colors selection:bg-charcoal selection:text-white">
         <Navbar />
 
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/signup" element={<SignUp />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
@@ -102,6 +110,8 @@ function App() {
           {/* 404 */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+
+        <Footer />
 
         <Toaster
           position="top-right"

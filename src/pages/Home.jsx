@@ -50,7 +50,7 @@ export default function Home() {
               <Link to="/auth/signup?role=student" className="group relative overflow-hidden bg-charcoal text-[#f2f0e9] px-10 py-5 rounded-full font-medium transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:scale-[1.02] flex items-center gap-3 w-full sm:w-auto justify-center">
                 <span className="relative z-10 text-[15px] uppercase tracking-wider">Initialize Profile</span>
                 <MoveRight className="w-4 h-4 relative z-10 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                <div className="absolute inset-0 bg-clay translate-y-full group-hover:translate-y-0 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] z-0" />
+                <div className="absolute inset-0 bg-charcoal translate-y-full group-hover:translate-y-0 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] z-0" />
               </Link>
             </motion.div>
           </motion.div>
@@ -232,7 +232,7 @@ export default function Home() {
           <motion.div variants={v.slideUpReveal} className="flex flex-col sm:flex-row gap-6 items-center">
             <Link to="/auth/signup?role=student" className="group relative overflow-hidden bg-charcoal text-[#f2f0e9] px-12 py-6 rounded-full font-medium transition-transform duration-700 hover:scale-[1.02] focus:ring-2 focus:ring-offset-2 focus:ring-charcoal">
               <span className="relative z-10 text-[15px] uppercase tracking-wider">Enroll as Student</span>
-              <div className="absolute inset-0 bg-clay translate-y-full group-hover:translate-y-0 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] z-0" />
+              <div className="absolute inset-0 bg-charcoal translate-y-full group-hover:translate-y-0 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] z-0" />
             </Link>
             <Link to="/auth/signup?role=examiner" className="px-12 py-6 text-charcoal font-medium hover:opacity-60 transition-opacity tracking-widest uppercase text-[13px] border border-charcoal/20 rounded-full hover:bg-charcoal/5">
               Institution Staff

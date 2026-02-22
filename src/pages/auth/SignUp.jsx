@@ -189,7 +189,7 @@ export default function SignUp() {
                     </motion.div>
                   )}
                 </AnimatePresence>
-                <div className="absolute inset-0 bg-clay translate-y-full group-hover:translate-y-0 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] z-0" />
+                <div className="absolute inset-0 bg-charcoal translate-y-full group-hover:translate-y-0 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] z-0" />
               </button>
             </motion.div>
           </form>
@@ -218,7 +218,7 @@ export default function SignUp() {
 
           <motion.p variants={v.slideUpReveal} className="text-center mt-12 text-sm text-charcoal/50">
             Validated Identity?{' '}
-            <Link to="/auth/login" className="text-charcoal hover:text-clay transition-colors font-medium border-b border-charcoal/20 hover:border-clay pb-0.5 ml-1">
+            <Link to="/auth/login" className="text-charcoal hover:text-charcoal transition-colors font-medium border-b border-charcoal/20 hover:border-charcoal pb-0.5 ml-1">
               Connect Session
             </Link>
           </motion.p>

@@ -17,11 +17,11 @@ export const Button = ({
   const baseClasses = 'inline-flex items-center justify-center gap-2 font-heading font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1';
 
   const variants = {
-    primary: 'bg-terracotta text-parchment-DEFAULT hover:bg-terracotta-dark shadow-sm hover:shadow-md focus:ring-terracotta/40',
+    primary: 'bg-terracotta text-[#f2f0e9]-DEFAULT hover:bg-terracotta-dark shadow-sm hover:shadow-md focus:ring-terracotta/40',
     secondary: 'bg-transparent border border-stone text-anthracite hover:bg-sand focus:ring-stone/40',
     ghost: 'bg-transparent text-terracotta hover:bg-terracotta-50 focus:ring-terracotta/20',
-    success: 'px-6 py-3 bg-sage text-parchment rounded-lg shadow-sm hover:shadow-md active:scale-[0.97] focus:ring-sage/40',
-    danger: 'px-6 py-3 bg-error text-parchment rounded-lg shadow-sm hover:shadow-md active:scale-[0.97] focus:ring-error/40',
+    success: 'px-6 py-3 bg-sage text-[#f2f0e9] rounded-lg shadow-sm hover:shadow-md active:scale-[0.97] focus:ring-sage/40',
+    danger: 'px-6 py-3 bg-error text-[#f2f0e9] rounded-lg shadow-sm hover:shadow-md active:scale-[0.97] focus:ring-error/40',
   };
 
   const sizes = {

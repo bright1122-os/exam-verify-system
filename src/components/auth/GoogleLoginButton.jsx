@@ -20,7 +20,7 @@ export const GoogleLoginButton = ({ onClick, loading = false }) => {
       whileTap={{ scale: 0.97 }}
       onClick={onClick || handleGoogleLogin}
       disabled={loading}
-      className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-parchment border-[1.5px] border-sand rounded-lg font-heading font-medium text-[15px] text-anthracite shadow-sm hover:shadow-md hover:bg-sand/50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="w-full flex items-center justify-center gap-3 px-6 py-3 bg-[#f2f0e9] border-[1.5px] border-sand rounded-lg font-heading font-medium text-[15px] text-anthracite shadow-sm hover:shadow-md hover:bg-sand/50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
     >
       <GoogleIcon />
       {loading ? 'Connecting...' : 'Continue with Google'}

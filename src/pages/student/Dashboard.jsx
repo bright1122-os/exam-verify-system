@@ -55,9 +55,9 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-clay text-parchment font-body">
+      <div className="min-h-screen flex items-center justify-center bg-[#f2f0e9] text-charcoal font-body">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-8 h-8 rounded-full border-2 border-parchment border-t-clay-dark animate-spin" />
+          <div className="w-8 h-8 rounded-full border-2 border-charcoal/10 border-t-charcoal animate-spin" />
           <span className="text-lg font-medium">Validating connection...</span>
         </div>
       </div>
@@ -77,14 +77,14 @@ export default function Dashboard() {
         Removed max-h constraints, opened up padding exponentially (py-40), 
         and added the massive 'Clearance Portal' parallax text.
       */}
-      <div className="min-h-screen bg-clay py-40 px-6 flex flex-col justify-start items-center selection:bg-parchment/30 selection:text-white relative overflow-hidden">
+      <div className="min-h-screen bg-[#f2f0e9] py-40 lg:py-64 px-6 flex flex-col justify-start items-center selection:bg-charcoal selection:text-[#f2f0e9] relative overflow-hidden">
 
         {/* Massive Parallax Typography Background */}
         <motion.div
           className="absolute inset-0 flex items-center justify-center pointer-events-none z-0"
           style={{ y: backgroundY }}
         >
-          <span className="text-[clamp(10rem,22vw,28rem)] font-heading leading-none text-parchment opacity-[0.03] whitespace-nowrap tracking-tighter">
+          <span className="text-[clamp(10rem,22vw,28rem)] font-heading leading-none text-charcoal opacity-[0.03] whitespace-nowrap tracking-tighter">
             CLEARANCE PORTAL
           </span>
         </motion.div>
@@ -95,16 +95,16 @@ export default function Dashboard() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.2, ease: INITI_EASE }}
-            className="w-full max-w-lg mx-auto flex justify-between items-center mb-16 text-sm font-medium text-parchment/70 px-4"
+            className="w-full max-w-lg mx-auto flex justify-between items-center mb-16 text-sm font-medium text-charcoal/70 px-4"
           >
             <div className="flex items-center gap-3 tracking-wide">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sage opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-sage"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-charcoal opacity-40"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-charcoal"></span>
               </span>
               Connection Secure
             </div>
-            <span className="font-mono text-xs opacity-60 bg-black/10 px-3 py-1.5 rounded-full tracking-wider">
+            <span className="font-mono text-xs opacity-60 bg-charcoal/5 px-3 py-1.5 rounded-full tracking-wider border border-charcoal/10">
               {new Date().toISOString().split('T')[0]}
             </span>
           </motion.div>
@@ -122,7 +122,7 @@ export default function Dashboard() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1.2, ease: INITI_EASE, delay: 0.4 }}
-            className="w-full max-w-lg mx-auto mt-20 text-center text-[13px] text-parchment/50 font-medium px-6 leading-[1.8] tracking-wide"
+            className="w-full max-w-lg mx-auto mt-20 text-center text-[13px] text-charcoal/50 font-medium px-6 leading-[1.8] tracking-wide"
           >
             <p>This portal issues cryptographically secure examination clearances. If your academic status appears incorrect, please consult your department's registry.</p>
           </motion.div>

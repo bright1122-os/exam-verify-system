@@ -16,7 +16,7 @@ export const Card = ({
 
   return (
     <Wrapper
-      className={`bg-white border border-parchment-dark rounded-lg p-6 ${hover ? 'cursor-pointer' : ''} ${className}`}
+      className={`bg-white border border-charcoal/10 rounded-lg p-6 ${hover ? 'cursor-pointer' : ''} ${className}`}
       onClick={onClick}
       {...hoverProps}
       {...props}

@@ -226,7 +226,7 @@ export default function ScanPortal() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-charcoal text-parchment font-body flex flex-col pt-0 pb-0 overflow-hidden relative">
+      <div className="min-h-screen bg-charcoal text-[#f2f0e9] font-body flex flex-col pt-0 pb-0 overflow-hidden relative">
 
         {/* Top Control Bar (Soft Floating) */}
         <div className="absolute top-6 left-6 right-6 z-50 flex justify-between items-center">
@@ -259,24 +259,24 @@ export default function ScanPortal() {
               <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
                 <div className="w-[80vw] max-w-sm aspect-square relative">
                   {/* Corner accents */}
-                  <div className="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 border-parchment rounded-tl-[3rem] opacity-70" />
-                  <div className="absolute top-0 right-0 w-16 h-16 border-t-2 border-r-2 border-parchment rounded-tr-[3rem] opacity-70" />
-                  <div className="absolute bottom-0 left-0 w-16 h-16 border-b-2 border-l-2 border-parchment rounded-bl-[3rem] opacity-70" />
-                  <div className="absolute bottom-0 right-0 w-16 h-16 border-b-2 border-r-2 border-parchment rounded-br-[3rem] opacity-70" />
+                  <div className="absolute top-0 left-0 w-16 h-16 border-t-2 border-l-2 border-[#f2f0e9] rounded-tl-[3rem] opacity-70" />
+                  <div className="absolute top-0 right-0 w-16 h-16 border-t-2 border-r-2 border-[#f2f0e9] rounded-tr-[3rem] opacity-70" />
+                  <div className="absolute bottom-0 left-0 w-16 h-16 border-b-2 border-l-2 border-[#f2f0e9] rounded-bl-[3rem] opacity-70" />
+                  <div className="absolute bottom-0 right-0 w-16 h-16 border-b-2 border-r-2 border-[#f2f0e9] rounded-br-[3rem] opacity-70" />
 
                   {/* Scanning indicator pulse */}
                   <motion.div
                     animate={{ scale: [1, 1.05, 1], opacity: [0.3, 0.6, 0.3] }}
                     transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                    className="absolute inset-0 rounded-[3rem] border border-parchment/30 shadow-[inset_0_0_40px_rgba(245,242,233,0.1)]"
+                    className="absolute inset-0 rounded-[3rem] border border-[#f2f0e9]/30 shadow-[inset_0_0_40px_rgba(245,242,233,0.1)]"
                   />
                 </div>
               </div>
 
               <div className="absolute bottom-16 left-0 right-0 text-center pointer-events-none flex justify-center">
                 <div className="bg-white/10 backdrop-blur-xl px-6 py-3 rounded-full flex items-center gap-3 shadow-float border border-white/10">
-                  <div className="w-2 h-2 rounded-full bg-parchment animate-pulse" />
-                  <span className="text-sm font-medium text-parchment tracking-wide">
+                  <div className="w-2 h-2 rounded-full bg-[#f2f0e9] animate-pulse" />
+                  <span className="text-sm font-medium text-[#f2f0e9] tracking-wide">
                     {loading ? 'Processing cipher...' : 'Align pass within frame'}
                   </span>
                 </div>
@@ -289,11 +289,11 @@ export default function ScanPortal() {
               key="manual"
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.8, ease: 'organic' }}
-              className="flex-1 flex flex-col justify-center items-center p-6 bg-parchment text-charcoal relative"
+              className="flex-1 flex flex-col justify-center items-center p-6 bg-[#f2f0e9] text-charcoal relative"
             >
               <div className="w-full max-w-md container-editorial p-10 bg-white shadow-float text-center">
                 <div className="w-16 h-16 bg-charcoal/5 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Search className="w-8 h-8 text-clay" />
+                  <Search className="w-8 h-8 text-charcoal" />
                 </div>
                 <h2 className="text-4xl font-heading mb-3 text-charcoal">Verify Identity</h2>
                 <p className="text-charcoal-light text-sm mb-10 font-medium">Secondary lookup layer for offline or unreadable access tokens.</p>
@@ -345,14 +345,14 @@ export default function ScanPortal() {
               {/* Information Drawer */}
               <motion.div
                 initial={{ y: '100%' }} animate={{ y: 0 }} transition={{ type: 'spring', damping: 25, stiffness: 200, delay: 0.3 }}
-                className="bg-parchment text-charcoal rounded-t-[3rem] w-full min-h-[50vh] flex flex-col p-8 sm:p-12 shadow-[0_-20px_40px_rgba(0,0,0,0.15)] relative max-h-[85vh] overflow-y-auto"
+                className="bg-[#f2f0e9] text-charcoal rounded-t-[3rem] w-full min-h-[50vh] flex flex-col p-8 sm:p-12 shadow-[0_-20px_40px_rgba(0,0,0,0.15)] relative max-h-[85vh] overflow-y-auto"
               >
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 w-16 h-1.5 bg-charcoal/10 rounded-full" />
 
                 {result.success ? (
                   <>
                     <div className="flex flex-col sm:flex-row gap-8 items-center sm:items-start mb-10 pb-10 border-b border-charcoal/10">
-                      <div className="w-32 h-32 rounded-3xl bg-white shadow-soft overflow-hidden flex-shrink-0 border border-parchment-dark">
+                      <div className="w-32 h-32 rounded-3xl bg-white shadow-soft overflow-hidden flex-shrink-0 border border-charcoal/10">
                         {result.student.photo_url ? (
                           <img src={result.student.photo_url} alt="Profile" className="w-full h-full object-cover" />
                         ) : <div className="w-full h-full flex items-center justify-center font-medium text-charcoal-light/50">No Image</div>}
@@ -361,7 +361,7 @@ export default function ScanPortal() {
                         <span className="text-3xl font-heading text-charcoal mb-2">{result.student.name}</span>
                         <span className="text-lg font-mono text-charcoal-light tracking-wide mb-4">{result.student.matric_number}</span>
                         <div className="flex flex-wrap justify-center sm:justify-start gap-2">
-                          <span className="text-xs font-semibold uppercase tracking-widest px-3 py-1.5 bg-clay/10 text-clay rounded-full">{result.student.level} Level</span>
+                          <span className="text-xs font-semibold uppercase tracking-widest px-3 py-1.5 bg-charcoal/10 text-charcoal rounded-full">{result.student.level} Level</span>
                           <span className="text-xs font-semibold uppercase tracking-widest px-3 py-1.5 border border-charcoal/10 rounded-full">{result.student.department}</span>
                         </div>
                       </div>
@@ -382,7 +382,7 @@ export default function ScanPortal() {
                           <button onClick={() => setBottomSheetMode('deny')} className="flex-1 py-4 text-rust font-medium rounded-full hover:bg-rust/10 transition-colors">
                             Initiate Denial
                           </button>
-                          <button onClick={handleApprove} disabled={loading} className="flex-1 bg-charcoal text-parchment font-medium py-4 rounded-full shadow-float hover:scale-[1.02] active:scale-[0.98] transition-all">
+                          <button onClick={handleApprove} disabled={loading} className="flex-1 bg-charcoal text-[#f2f0e9] font-medium py-4 rounded-full shadow-float hover:scale-[1.02] active:scale-[0.98] transition-all">
                             {loading ? 'Syncing...' : 'Log Validation & Admit'}
                           </button>
                         </div>
